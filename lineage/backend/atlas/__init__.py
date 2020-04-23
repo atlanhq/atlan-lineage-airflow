@@ -1,27 +1,6 @@
-# -*- coding: utf-8 -*-
-#
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
 from airflow.configuration import conf
 from atlan_lite.lineage import datasets
-# from airflow.lineage.backend import LineageBackend
 from airflow.lineage.backend.atlas import AtlasBackend
-# from airflow.lineage.backend.atlas.typedefs import operator_typedef
 from airflow.utils.timezone import convert_to_utc
 
 from atlasclient.client import Atlas
@@ -40,14 +19,6 @@ class AtlanBackend(AtlasBackend):
     def send_lineage(operator, inlets, outlets, context):
         print("IN SEND LINEAGE")
         client = Atlas(_host, port=_port, username=_username, password=_password)
-        # try:
-        #     client.typedefs.create(data=operator_typedef)
-        #     print("TRY")
-        #     print(operator_typedef)
-        # except HttpError:
-        #     print("ESXCEPT")
-        #     print(operator_typedef)
-        #     client.typedefs.update(data=operator_typedef)
 
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
