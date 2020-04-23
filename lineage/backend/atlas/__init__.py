@@ -8,10 +8,10 @@ from atlasclient.exceptions import HttpError
 
 SERIALIZED_DATE_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-_username = conf.get("atlas", "username")
-_password = conf.get("atlas", "password")
-_port = conf.get("atlas", "port")
-_host = conf.get("atlas", "host")
+_username = conf.get("atlan", "username")
+_password = conf.get("atlan", "password")
+_port = conf.get("atlan", "port")
+_host = conf.get("atlan", "host")
 
 
 class AtlanBackend(AtlasBackend):

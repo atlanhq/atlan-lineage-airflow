@@ -6,7 +6,7 @@ from jinja2 import Environment
 from airflow.lineage.datasets import * 
 from airflow.lineage.datasets import _inherited
 
-class ETLOperator(Asset ):
+class ETLOperator(Asset):
     type_name = "etl_operator"
 
     # todo we can derive this from the spec
