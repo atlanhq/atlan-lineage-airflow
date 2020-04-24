@@ -6,13 +6,6 @@ from jinja2 import Environment
 from airflow.lineage.datasets import * 
 from airflow.lineage.datasets import _inherited
 
-class ETLOperator(Asset):
-    type_name = "etl_operator2"
-
-    # todo we can derive this from the spec
-    attributes = ["dag_id", "task_id", "command", "conn_id", "name", "execution_date",
-                  "start_date", "end_date", "inputs", "outputs"]
-
 class Asset(object):
     type_name = "Asset"
     attributes = []
@@ -105,3 +98,10 @@ class Table(Asset):
         self._qualified_name = qualified_name
         # self._data['path'] = self.name
 
+
+class ETLOperator(Asset):
+    type_name = "etl_operator"
+
+    # todo we can derive this from the spec
+    attributes = ["dag_id", "task_id", "command", "conn_id", "name", "execution_date",
+                  "start_date", "end_date", "inputs", "outputs"]

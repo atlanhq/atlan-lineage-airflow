@@ -1,5 +1,7 @@
-from setuptools import setup, find_packages
+from setuptools import setup
+
 __version__ = '0.0.1'
+
 setup_args = dict(
     name='atlan_lite',
     version='0.0.1',
