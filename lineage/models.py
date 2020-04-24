@@ -7,7 +7,7 @@ from airflow.lineage.datasets import *
 from airflow.lineage.datasets import _inherited
 
 class ETLOperator(Asset):
-    type_name = "etl_operator"
+    type_name = "etl_operator2"
 
     # todo we can derive this from the spec
     attributes = ["dag_id", "task_id", "command", "conn_id", "name", "execution_date",
@@ -82,7 +82,7 @@ class Asset(object):
             "typeName": self.type_name,
             "attributes": attributes,
         }
-        print("AS DICT:", d)
+        print("CUSTOMMMM  AS DICT:", d)
 
         return d
 
@@ -98,9 +98,10 @@ class Table(Asset):
     type_name = "table"
     attributes = ["name"]
 
-    def __init__(self, name=None, data=None, qualified_name = None):
-        print("NAME:", name)
+    def __init__(self, data=None, qualified_name = None):
+        name = qualified_name.split("/")[-1]
         super(Table, self).__init__(name=name, data=data)
 
         self._qualified_name = qualified_name
         # self._data['path'] = self.name
+

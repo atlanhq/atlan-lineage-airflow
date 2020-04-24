@@ -1,10 +1,11 @@
 from airflow.configuration import conf
-from atlan_lite.lineage import datasets
 from airflow.lineage.backend.atlas import AtlasBackend
 from airflow.utils.timezone import convert_to_utc
 
 from atlasclient.client import Atlas
 from atlasclient.exceptions import HttpError
+
+from atlan_lite.lineage import models
 
 SERIALIZED_DATE_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%fZ"
 
@@ -78,7 +79,7 @@ class AtlanBackend(AtlasBackend):
         if _end_date:
             data["end_date"] = _end_date.strftime(SERIALIZED_DATE_FORMAT_STR)
 
-        process = datasets.ETLOperator(qualified_name=qualified_name, data=data)
+        process = models.ETLOperator(qualified_name=qualified_name, data=data)
         print("THIS IS NOT RUNNING")
         print("PROCESS CUSTOM MODULE")
         print(process.as_dict())
