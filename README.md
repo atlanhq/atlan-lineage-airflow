@@ -2,7 +2,7 @@
 
 #### Installation:
 
-pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin
+`pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
 
 #### Add the following in airflow.cfg
 1. Search for `[lineage]` and add the following
