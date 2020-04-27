@@ -1,0 +1,3 @@
+atlasclient==1.0.0
+snowflake-connector-python==2.2.4
+snowflake-sqlalchemy==1.2.3
