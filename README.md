@@ -1,3 +1,5 @@
+### Plugin to send airflow lineage data to Atlan
+
 #### Installation:
 
 pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin
@@ -19,3 +21,7 @@ port = port
 username = username
 password = password
 ```
+
+#### Caveats
+1. Dependent on airflow's lineage modules
+2. The corresponding entity and relationship definitions for Atlas reside in Caspian
