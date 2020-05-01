@@ -1,0 +1,6 @@
+README.md
+setup.py
+atlan_lite.egg-info/PKG-INFO
+atlan_lite.egg-info/SOURCES.txt
+atlan_lite.egg-info/dependency_links.txt
+atlan_lite.egg-info/top_level.txt

@@ -75,7 +75,6 @@ class Asset(object):
             "typeName": self.type_name,
             "attributes": attributes,
         }
-        print("CUSTOMMMM  AS DICT:", d)
 
         return d
 

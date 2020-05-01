@@ -6,6 +6,9 @@ from atlasclient.client import Atlas
 from atlasclient.exceptions import HttpError
 
 from atlan_lite.lineage import models
+from airflow.lineage.backend.atlas.typedefs import operator_typedef
+from airflow.lineage import datasets
+
 
 SERIALIZED_DATE_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%fZ"
 
@@ -18,8 +21,12 @@ _host = conf.get("atlan", "host")
 class AtlanBackend(AtlasBackend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
-        print("IN SEND LINEAGE")
         client = Atlas(_host, port=_port, username=_username, password=_password)
+
+        try:
+            client.typedefs.create(data=operator_typedef)
+        except HttpError:
+            client.typedefs.update(data=operator_typedef)
 
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
@@ -32,16 +39,14 @@ class AtlanBackend(AtlasBackend):
                     continue
 
                 entity.set_context(context)
-                print("ENTITY:", entity.as_dict())
+                print("INLET:", entity.as_dict())
                 client.entity_post.create(data={"entity": entity.as_dict()})
-                print("THIS IS RUNNING")
                 inlet_list.append({"typeName": entity.type_name,
                                    "uniqueAttributes": {
                                        "qualifiedName": entity.qualified_name
                                    }})
 
 
-        print("CUSTOM MODULE INLETS: ", inlet_list)
         outlet_list = []
         if outlets:
             for entity in outlets:
@@ -49,14 +54,13 @@ class AtlanBackend(AtlasBackend):
                     continue
 
                 entity.set_context(context)
+                print("OUTLET:", entity.as_dict())
                 client.entity_post.create(data={"entity": entity.as_dict()})
-                print("THIS IS RUNNING")
                 outlet_list.append({"typeName": entity.type_name,
                                     "uniqueAttributes": {
                                         "qualifiedName": entity.qualified_name
                                     }})
 
-        print("CUSTOM MODULE OUTLETS: ", outlet_list)
         operator_name = operator.__class__.__name__
         name = "{} {} ({})".format(operator.dag_id, operator.task_id, operator_name)
         qualified_name = "{}_{}_{}@{}".format(operator.dag_id,
@@ -79,9 +83,8 @@ class AtlanBackend(AtlasBackend):
         if _end_date:
             data["end_date"] = _end_date.strftime(SERIALIZED_DATE_FORMAT_STR)
 
-        process = models.ETLOperator(qualified_name=qualified_name, data=data)
-        print("THIS IS NOT RUNNING")
-        print("PROCESS CUSTOM MODULE")
-        print(process.as_dict())
-
+        #process = models.ETLOperator(qualified_name=qualified_name, data=data)
+        process = datasets.Operator(qualified_name=qualified_name, data=data)
+        print("PROCESS: ", process.as_dict())
+        
         client.entity_post.create(data={"entity": process.as_dict()})
