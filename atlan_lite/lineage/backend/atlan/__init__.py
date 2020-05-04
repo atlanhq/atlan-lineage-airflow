@@ -18,7 +18,7 @@ _port = conf.get("atlan", "port")
 _host = conf.get("atlan", "host")
 
 
-class AtlanBackend(AtlasBackend):
+class AtlanBackend(Backend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
         client = Atlas(_host, port=_port, username=_username, password=_password)
