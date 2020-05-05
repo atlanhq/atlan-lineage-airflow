@@ -5,10 +5,11 @@ from airflow.utils.timezone import convert_to_utc
 from atlasclient.client import Atlas
 from atlasclient.exceptions import HttpError
 
-from atlan_lite.lineage import models
+from atlan_lite.models.backend import Backend
 from airflow.lineage.backend.atlas.typedefs import operator_typedef
 from airflow.lineage import datasets
 
+import itertools
 
 SERIALIZED_DATE_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%fZ"
 
@@ -24,9 +25,12 @@ class AtlanBackend(Backend):
         client = Atlas(_host, port=_port, username=_username, password=_password)
 
         try:
+            print("EHERE")
             client.typedefs.create(data=operator_typedef)
         except HttpError:
-            client.typedefs.update(data=operator_typedef)
+            print("OR EHERE")
+            res = client.typedefs.update(data=operator_typedef)
+            print("RES", res)
 
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
@@ -40,7 +44,10 @@ class AtlanBackend(Backend):
 
                 entity.set_context(context)
                 print("INLET:", entity.as_dict())
-                client.entity_post.create(data={"entity": entity.as_dict()})
+                x = [entity.as_dict()]
+                x = list(itertools.chain(*[x]))
+                client.entity_bulk.create(data={"entities": x})      
+                # client.entity_post.create(data={"entity": entity.as_dict()})          
                 inlet_list.append({"typeName": entity.type_name,
                                    "uniqueAttributes": {
                                        "qualifiedName": entity.qualified_name
