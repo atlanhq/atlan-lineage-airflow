@@ -103,39 +103,39 @@ class SnowflakeWarehouse(Warehouse):
     type_name = "snowflake_warehouse"
     attributes = ["name"]
 
-    def __init__(self, name, superx, data=None):
+    def __init__(self, name, parent, data=None):
         super(Warehouse, self).__init__(name=name, data=data)
-        self._qualified_name = superx['attributes']['qualifiedName'] + '/' + name
+        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + name
         self.guid = int(str(int(hashlib.md5(name.encode()).hexdigest(), 16) * -1)[:10])
         self._data['server'] = {
-            'typeName': superx['typeName'],
-            'guid': superx['guid']
+            'typeName': parent['typeName'],
+            'guid': parent['guid']
         }
 
 class SnowflakeDatabase(DataBase):
     type_name = "snowflake_database"
     attributes = ["name"]
 
-    def __init__(self, name, superx, data=None):
+    def __init__(self, name, parent, data=None):
         super(DataBase, self).__init__(name=name, data=data)
-        self._qualified_name = superx['attributes']['qualifiedName'] + '/' + name
+        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + name
         self.guid = int(str(int(hashlib.md5(name.encode()).hexdigest(), 16) * -1)[:10])
         self._data['warehouse'] = {
-            'typeName': superx['typeName'],
-            'guid': superx['guid']
+            'typeName': parent['typeName'],
+            'guid': parent['guid']
         }
 
 class SnowflakeSchema(Schema):
     type_name = "snowflake_schema"
     attributes = ["name"]
     
-    def __init__(self, name, superx, data=None):
+    def __init__(self, name, parent, data=None):
         super(Schema, self).__init__(name=name, data=data)
-        self._qualified_name = superx['attributes']['qualifiedName'] + '/' + name
+        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + name
         self.guid = int(str(int(hashlib.md5(name.encode()).hexdigest(), 16) * -1)[:10])
         self._data['database'] = {
-            'typeName': superx['typeName'],
-            'guid': superx['guid']
+            'typeName': parent['typeName'],
+            'guid': parent['guid']
         }
 
 
@@ -147,14 +147,14 @@ class SnowflakeTable(Table):
         # self.account, self.wh, self.db, self.schema, self.table = self.create_related_entities(string, table)
         print("TABLE: ", name)
         super(Table, self).__init__(name=name, data=data)
-        superx = self.create_related_entities(string)
-        print("SUPER:", superx)
-        self._qualified_name = superx['attributes']['qualifiedName'] + '/' + name
+        parent = self.create_related_entities(string)
+        print("SUPER:", parent)
+        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + name
         print("QUALIFIED NAME:", self._qualified_name)
         self.guid = int(str(int(hashlib.md5(name.encode()).hexdigest(), 16) * -1)[:10])
         self._data['database_schema'] = {
-            'typeName': superx['typeName'],
-            'guid': superx['guid']
+            'typeName': parent['typeName'],
+            'guid': parent['guid']
         }
 
     def parse_conn_string(self, conn_string):
