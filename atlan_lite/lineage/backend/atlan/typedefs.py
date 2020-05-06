@@ -1,4 +1,6 @@
-operator_typedef = {
+from airflow.lineage.backend.atlas.typedefs import operator_typedef
+
+entity_typedef = {
     'entityDefs': [
         {
             'superTypes': [

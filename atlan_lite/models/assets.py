@@ -39,6 +39,10 @@ class Entity(object):
 
         return self._qualified_name
 
+    def get_guid(self):
+        return int(str(int(hashlib.md5(self.name.encode()).hexdigest(), 16) * -1)[:10])
+
+
     def as_dict(self):
         attributes = dict(self._data)
         attributes.update({"qualifiedName": self.qualified_name})
@@ -88,7 +92,7 @@ class Table(DataSet):
     type_name = "table"
     attributes = ["name"]
     def __init__(self, name=None, data=None):
-        super(D, self).__init__(name=name, data=data)
+        super(DataSet, self).__init__(name=name, data=data)
 
 class SnowflakeAccount(Server):
     type_name = "snowflake_account"
@@ -96,8 +100,9 @@ class SnowflakeAccount(Server):
 
     def __init__(self, name, data=None):
         super(Server, self).__init__(name=name, data=data)
-        self._qualified_name = 'server://' + name
-        self.guid = int(str(int(hashlib.md5(name.encode()).hexdigest(), 16) * -1)[:10])
+        self.name = name
+        self._qualified_name = 'server://' + self.name
+        self.guid = self.get_guid()
 
 class SnowflakeWarehouse(Warehouse):
     type_name = "snowflake_warehouse"
@@ -105,8 +110,9 @@ class SnowflakeWarehouse(Warehouse):
 
     def __init__(self, name, parent, data=None):
         super(Warehouse, self).__init__(name=name, data=data)
-        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + name
-        self.guid = int(str(int(hashlib.md5(name.encode()).hexdigest(), 16) * -1)[:10])
+        self.name = name
+        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
+        self.guid = self.get_guid()
         self._data['server'] = {
             'typeName': parent['typeName'],
             'guid': parent['guid']
@@ -118,8 +124,9 @@ class SnowflakeDatabase(DataBase):
 
     def __init__(self, name, parent, data=None):
         super(DataBase, self).__init__(name=name, data=data)
-        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + name
-        self.guid = int(str(int(hashlib.md5(name.encode()).hexdigest(), 16) * -1)[:10])
+        self.name = name
+        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
+        self.guid = self.get_guid()
         self._data['warehouse'] = {
             'typeName': parent['typeName'],
             'guid': parent['guid']
@@ -131,8 +138,9 @@ class SnowflakeSchema(Schema):
     
     def __init__(self, name, parent, data=None):
         super(Schema, self).__init__(name=name, data=data)
-        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + name
-        self.guid = int(str(int(hashlib.md5(name.encode()).hexdigest(), 16) * -1)[:10])
+        self.name = name
+        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
+        self.guid = self.get_guid()
         self._data['database'] = {
             'typeName': parent['typeName'],
             'guid': parent['guid']
@@ -143,15 +151,12 @@ class SnowflakeTable(Table):
     type_name = "snowflake_table"
     attributes = ["name"]
 
-    def __init__(self, name, string, data=None):
-        # self.account, self.wh, self.db, self.schema, self.table = self.create_related_entities(string, table)
-        print("TABLE: ", name)
+    def __init__(self, name, conn_string, data=None):
         super(Table, self).__init__(name=name, data=data)
-        parent = self.create_related_entities(string)
-        print("SUPER:", parent)
-        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + name
-        print("QUALIFIED NAME:", self._qualified_name)
-        self.guid = int(str(int(hashlib.md5(name.encode()).hexdigest(), 16) * -1)[:10])
+        parent = self.create_parent_entities(conn_string)
+        self.name = name
+        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
+        # self.guid = self.get_guid()
         self._data['database_schema'] = {
             'typeName': parent['typeName'],
             'guid': parent['guid']
@@ -165,11 +170,10 @@ class SnowflakeTable(Table):
         account = snowflake_details[0]
         db = snowflake_details[1]
         schema = snowflake_details[2]
-        print("ACCOUNT: {}, WH: {}, DB: {}, SCHEMA: {}".format(account, warehouse, db, schema))
         return account, warehouse, db, schema
 
-    def create_related_entities(self, string):
-        account, wh, db, schema = self.parse_conn_string(string)
+    def create_parent_entities(self, conn_string):
+        account, wh, db, schema = self.parse_conn_string(conn_string)
         self.account = SnowflakeAccount(account)
         self.wh = SnowflakeWarehouse(wh, self.account.as_dict())
         self.db = SnowflakeDatabase(db, self.wh.as_dict())
@@ -180,14 +184,9 @@ class SnowflakeTable(Table):
         attributes = dict(self._data)
         attributes.update({"qualifiedName": self.qualified_name})
 
-        env = Environment()
-        # if self.context:
-        #     for key, value in six.iteritems(attributes):
-        #         attributes[key] = env.from_string(value).render(**self.context)
-        print("OVER RIDING METHOD")
         d = {
             "typeName": self.type_name,
-            "attributes": attributes,
+            "attributes": attributes
         }
 
 

@@ -1,22 +1,21 @@
 from airflow.configuration import conf
-from airflow.lineage.backend.atlas import AtlasBackend
 from airflow.utils.timezone import convert_to_utc
 
 from atlasclient.client import Atlas
 from atlasclient.exceptions import HttpError
 
 from atlan_lite.models.backend import Backend
-from airflow.lineage.backend.atlas.typedefs import operator_typedef
+from atlan_lite.lineage.backend.atlan.typedefs import operator_typedef, entity_typedef
 from airflow.lineage import datasets
 
 import itertools
 
 SERIALIZED_DATE_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-_username = conf.get("atlan", "username")
-_password = conf.get("atlan", "password")
-_port = conf.get("atlan", "port")
-_host = conf.get("atlan", "host")
+_username = conf.get("atlas", "username")
+_password = conf.get("atlas", "password")
+_port = conf.get("atlas", "port")
+_host = conf.get("atlas", "host")
 
 
 class AtlanBackend(Backend):
@@ -25,12 +24,11 @@ class AtlanBackend(Backend):
         client = Atlas(_host, port=_port, username=_username, password=_password)
 
         try:
-            print("EHERE")
             client.typedefs.create(data=operator_typedef)
+            client.typedefs.create(data=entity_typedef)
         except HttpError:
-            print("OR EHERE")
-            res = client.typedefs.update(data=operator_typedef)
-            print("RES", res)
+            client.typedefs.update(data=operator_typedef)
+            client.typedefs.update(data=entity_typedef)
 
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
@@ -44,14 +42,17 @@ class AtlanBackend(Backend):
 
                 entity.set_context(context)
                 print("INLET:", entity.as_dict())
-                x = [entity.as_dict()]
-                x = list(itertools.chain(*[x]))
-                client.entity_bulk.create(data={"entities": x})      
-                # client.entity_post.create(data={"entity": entity.as_dict()})          
+                x = entity.as_dict()
+                x = list(itertools.chain(*[x]))                    
+                for x_ in x:
+                    try:                        
+                        client.entity_post.create(data={"entity": x_})     
+                    except:
+                        pass
                 inlet_list.append({"typeName": entity.type_name,
-                                   "uniqueAttributes": {
-                                       "qualifiedName": entity.qualified_name
-                                   }})
+                                "uniqueAttributes": {
+                                    "qualifiedName": entity.qualified_name
+                                }})
 
 
         outlet_list = []
@@ -62,7 +63,13 @@ class AtlanBackend(Backend):
 
                 entity.set_context(context)
                 print("OUTLET:", entity.as_dict())
-                client.entity_post.create(data={"entity": entity.as_dict()})
+                x = entity.as_dict()
+                x = list(itertools.chain(*[x]))     
+                for x_ in x:
+                    try:
+                        client.entity_post.create(data={"entity": x_})     
+                    except:
+                        pass
                 outlet_list.append({"typeName": entity.type_name,
                                     "uniqueAttributes": {
                                         "qualifiedName": entity.qualified_name
@@ -90,7 +97,6 @@ class AtlanBackend(Backend):
         if _end_date:
             data["end_date"] = _end_date.strftime(SERIALIZED_DATE_FORMAT_STR)
 
-        #process = models.ETLOperator(qualified_name=qualified_name, data=data)
         process = datasets.Operator(qualified_name=qualified_name, data=data)
         print("PROCESS: ", process.as_dict())
         
