@@ -6,19 +6,10 @@ entity_typedef = {
             'superTypes': [
                 'Asset'
             ],
-            'name': 'server',
+            'name': 'cluster',
             'typeVersion': '2.0',
             'serviceType': 'atlan',
             'description': 'Server Entity'
-        },
-        {
-            'superTypes': [
-                'Asset'
-            ],
-            'name': 'warehouse',
-            'typeVersion': '2.0',
-            'serviceType': 'atlan',
-            'description': 'Warehouse Entity'
         },
         {
             'superTypes': [
@@ -33,7 +24,7 @@ entity_typedef = {
             'superTypes': [
                 'Asset'
             ],
-            'name': 'database_schema',
+            'name': 'schema',
             'typeVersion': '2.0',
             'serviceType': 'atlan',
             'description': 'Database Schema Entity'
@@ -49,7 +40,7 @@ entity_typedef = {
         },
         {
             'superTypes': [
-                'server'
+                'cluster'
             ],
             'name': 'snowflake_account',
             'typeVersion': '2.0',
