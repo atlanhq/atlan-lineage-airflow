@@ -18,16 +18,19 @@ _port = conf.get("atlas", "port")
 _host = conf.get("atlas", "host")
 
 
-class AtlanBackend(Backend):
+class AtlasBackend(Backend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
         client = Atlas(_host, port=_port, username=_username, password=_password)
 
         try:
             client.typedefs.create(data=operator_typedef)
-            client.typedefs.create(data=entity_typedef)
         except HttpError:
             client.typedefs.update(data=operator_typedef)
+
+        try:
+            client.typedefs.create(data=entity_typedef)
+        except HttpError:
             client.typedefs.update(data=entity_typedef)
 
         _execution_date = convert_to_utc(context['ti'].execution_date)
@@ -42,13 +45,15 @@ class AtlanBackend(Backend):
 
                 entity.set_context(context)
                 print("INLET:", entity.as_dict())
-                x = entity.as_dict()
-                x = list(itertools.chain(*[x]))                    
-                for x_ in x:
-                    try:                        
-                        client.entity_post.create(data={"entity": x_})     
-                    except:
-                        pass
+                entity_dict = entity.as_dict()
+                try:
+                    if isinstance(entity_dict, dict):
+                        client.entity_post.create(data={"entity": entity_dict})
+                    elif isinstance(entity_dict, list):
+                        client.entity_bulk.create(data={"entities": entity_dict})
+                except Exception as e:
+                    print(e)
+            
                 inlet_list.append({"typeName": entity.type_name,
                                 "uniqueAttributes": {
                                     "qualifiedName": entity.qualified_name
@@ -63,13 +68,15 @@ class AtlanBackend(Backend):
 
                 entity.set_context(context)
                 print("OUTLET:", entity.as_dict())
-                x = entity.as_dict()
-                x = list(itertools.chain(*[x]))     
-                for x_ in x:
-                    try:
-                        client.entity_post.create(data={"entity": x_})     
-                    except:
-                        pass
+                entity_dict = entity.as_dict()
+                try:
+                    if isinstance(entity_dict, dict):
+                        client.entity_post.create(data={"entity": entity_dict})
+                    elif isinstance(entity_dict, list):
+                        client.entity_bulk.create(data={"entities": entity_dict})
+                except Exception as e:
+                    print(e)
+
                 outlet_list.append({"typeName": entity.type_name,
                                     "uniqueAttributes": {
                                         "qualifiedName": entity.qualified_name
