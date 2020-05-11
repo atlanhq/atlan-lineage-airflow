@@ -42,6 +42,6 @@ SnowflakeTable(table_alias = "snowflake-account-name/snowflake-database-name/sno
 
 ```
 
-**Sample dags can be found in the folder sample_dags**
+*Sample dags can be found in the folder* ***sample_dags***
 
 
