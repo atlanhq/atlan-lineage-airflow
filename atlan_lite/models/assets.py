@@ -4,8 +4,7 @@ from typing import List
 from jinja2 import Environment
 
 from airflow.lineage.datasets import *
-# TODO: fix the imports
-from airflow.lineage.datasets import _inherited
+# from airflow.lineage.datasets import _inherited
 
 import hashlib
 
@@ -33,9 +32,9 @@ class Entity(object):
 
     @property
     def qualified_name(self):
-        # if self.context:
-        #     env = Environment()
-        #     return env.from_string(self._qualified_name).render(**self.context)
+        if self.context:
+            env = Environment()
+            return env.from_string(self._qualified_name).render(**self.context)
 
         return self._qualified_name
 
@@ -60,16 +59,9 @@ class Entity(object):
         return d
 
 
-class Server(Entity):
+class Cluster(Entity):
     attributes = ["name"] # type: List[str]
-    type_name = "server"
-    def __init__(self, name=None, data=None):
-        super(Entity, self).__init__(name=name, data=data)
-
-
-class Warehouse(Entity):
-    type_name = "warehouse"
-    attributes = ["name"]
+    type_name = "cluster"
     def __init__(self, name=None, data=None):
         super(Entity, self).__init__(name=name, data=data)
 
@@ -82,7 +74,7 @@ class DataBase(Entity):
 
 
 class Schema(Entity):
-    type_name = "database_schema"
+    type_name = "schema"
     attributes = ["name"]
     def __init__(self, name=None, data=None):
         super(Entity, self).__init__(name=name, data=data)
@@ -94,29 +86,15 @@ class Table(DataSet):
     def __init__(self, name=None, data=None):
         super(DataSet, self).__init__(name=name, data=data)
 
-class SnowflakeAccount(Server):
-    type_name = "snowflake_account"
+class SnowflakeAccount(Cluster):
+    type_name = "snowflake_cluster"
     attributes = ["name"]
 
     def __init__(self, name, data=None):
-        super(Server, self).__init__(name=name, data=data)
+        super(Cluster, self).__init__(name=name, data=data)
         self.name = name
-        self._qualified_name = 'server://' + self.name
+        self._qualified_name = 'cluster://' + self.name
         self.guid = self.get_guid()
-
-class SnowflakeWarehouse(Warehouse):
-    type_name = "snowflake_warehouse"
-    attributes = ["name"]
-
-    def __init__(self, name, parent, data=None):
-        super(Warehouse, self).__init__(name=name, data=data)
-        self.name = name
-        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
-        self.guid = self.get_guid()
-        self._data['server'] = {
-            'typeName': parent['typeName'],
-            'guid': parent['guid']
-        }
 
 class SnowflakeDatabase(DataBase):
     type_name = "snowflake_database"
@@ -125,9 +103,9 @@ class SnowflakeDatabase(DataBase):
     def __init__(self, name, parent, data=None):
         super(DataBase, self).__init__(name=name, data=data)
         self.name = name
-        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
+        self._qualified_name = parent['attributes']['name'] + '://' + self.name
         self.guid = self.get_guid()
-        self._data['warehouse'] = {
+        self._data['cluster'] = {
             'typeName': parent['typeName'],
             'guid': parent['guid']
         }
@@ -139,7 +117,7 @@ class SnowflakeSchema(Schema):
     def __init__(self, name, parent, data=None):
         super(Schema, self).__init__(name=name, data=data)
         self.name = name
-        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
+        self._qualified_name = parent['attributes']['qualifiedName'] + '.' + self.name
         self.guid = self.get_guid()
         self._data['database'] = {
             'typeName': parent['typeName'],
@@ -151,53 +129,68 @@ class SnowflakeTable(Table):
     type_name = "snowflake_table"
     attributes = ["name"]
 
-    def __init__(self, name, conn_string, data=None):
+    def __init__(self, name=None, table_alias = None, connection_id = None, data=None):
         super(Table, self).__init__(name=name, data=data)
-        parent = self.create_parent_entities(conn_string)
-        self.name = name
-        self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
-        # self.guid = self.get_guid()
-        self._data['database_schema'] = {
-            'typeName': parent['typeName'],
-            'guid': parent['guid']
-        }
+        if name:
+            parent = self.create_parent_entities(table_alias, connection_id)
+            self.name = name
+            self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
+            # self.guid = self.get_guid()
+            self._data['parentSchema'] = {
+                'typeName': parent['typeName'],
+                'guid': parent['guid']
+            }
 
-    def parse_conn_string(self, conn_string):
-        snowflake_details = conn_string.split("@")[1]
-        warehouse = snowflake_details.split("?")[1].split("&")[0].split("=")[1]
-        snowflake_details = snowflake_details.split("?")[0]
-        snowflake_details = snowflake_details.split("/")
-        account = snowflake_details[0]
-        db = snowflake_details[1]
-        schema = snowflake_details[2]
-        return account, warehouse, db, schema
+    def parse_alias(self, string):
+        # snowflake_details = conn_string.split("@")[1]
+        # warehouse = snowflake_details.split("?")[1].split("&")[0].split("=")[1]
+        # snowflake_details = snowflake_details.split("?")[0]
+        # snowflake_details = snowflake_details.split("/")
+        # account = snowflake_details[0]
+        # db = snowflake_details[1]
+        # schema = snowflake_details[2]
 
-    def create_parent_entities(self, conn_string):
-        account, wh, db, schema = self.parse_conn_string(conn_string)
+        ## cy25812.ap-southeast-1/demo_db/public/tablename
+        account = string.split('/')[0]
+        db = string.split('/')[1]
+        schema = string.split('/')[2]
+        return account, db, schema
+
+    def create_parent_entities(self, table_alias, connection_id):
+        account, db, schema = self.parse_alias(table_alias)
         self.account = SnowflakeAccount(account)
-        self.wh = SnowflakeWarehouse(wh, self.account.as_dict())
-        self.db = SnowflakeDatabase(db, self.wh.as_dict())
+        self.db = SnowflakeDatabase(db, self.account.as_dict())
         self.schema = SnowflakeSchema(schema, self.db.as_dict())
         return self.schema.as_dict()
 
-    def as_dict(self):
-        attributes = dict(self._data)
-        attributes.update({"qualifiedName": self.qualified_name})
-
-        d = {
-            "typeName": self.type_name,
-            "attributes": attributes
-        }
-
+    def as_nested_dict(self):
+        d = self.as_dict()
 
         entities = []
         entities.append(self.account.as_dict())
-        entities.append(self.wh.as_dict())
         entities.append(self.db.as_dict())
         entities.append(self.schema.as_dict())
         entities.append(d)
 
         return entities
+
+    def as_dict(self):
+        attributes = dict(self._data)
+        attributes.update({"qualifiedName": self.qualified_name})
+
+        env = Environment()
+        if self.context:
+            for key, value in six.iteritems(attributes):
+                try:
+                    attributes[key] = env.from_string(value).render(**self.context)
+                except Exception as e:
+                    pass
+
+        d = {
+            "typeName": self.type_name,
+            "attributes": attributes
+        }
+        return d
 
             
         
