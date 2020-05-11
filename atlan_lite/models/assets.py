@@ -4,7 +4,6 @@ from typing import List
 from jinja2 import Environment
 
 from airflow.lineage.datasets import *
-# from airflow.lineage.datasets import _inherited
 
 import hashlib
 
@@ -28,10 +27,12 @@ class Entity(object):
                               if key in set(self.attributes))
 
     def set_context(self, context):
+        # type: () -> None
         self.context = context
 
     @property
     def qualified_name(self):
+        # type: () -> str
         if self.context:
             env = Environment()
             return env.from_string(self._qualified_name).render(**self.context)
@@ -39,10 +40,12 @@ class Entity(object):
         return self._qualified_name
 
     def get_guid(self):
+        # type: () -> str
         return int(str(int(hashlib.md5(self.name.encode()).hexdigest(), 16) * -1)[:10])
 
 
     def as_dict(self):
+        # type: () -> dict
         attributes = dict(self._data)
         attributes.update({"qualifiedName": self.qualified_name})
 
@@ -142,21 +145,14 @@ class SnowflakeTable(Table):
             }
 
     def parse_alias(self, string):
-        # snowflake_details = conn_string.split("@")[1]
-        # warehouse = snowflake_details.split("?")[1].split("&")[0].split("=")[1]
-        # snowflake_details = snowflake_details.split("?")[0]
-        # snowflake_details = snowflake_details.split("/")
-        # account = snowflake_details[0]
-        # db = snowflake_details[1]
-        # schema = snowflake_details[2]
-
-        ## cy25812.ap-southeast-1/demo_db/public/tablename
+        # type: (str) -> Tuple(str, str, str)
         account = string.split('/')[0]
         db = string.split('/')[1]
         schema = string.split('/')[2]
         return account, db, schema
 
     def create_parent_entities(self, table_alias, connection_id):
+        # type: (Union[str, None], Union[str, None]) -> dict 
         account, db, schema = self.parse_alias(table_alias)
         self.account = SnowflakeAccount(account)
         self.db = SnowflakeDatabase(db, self.account.as_dict())
@@ -164,9 +160,10 @@ class SnowflakeTable(Table):
         return self.schema.as_dict()
 
     def as_nested_dict(self):
+        # type: () -> List[dict]
         d = self.as_dict()
 
-        entities = []
+        entities = [] # type: List[dict]
         entities.append(self.account.as_dict())
         entities.append(self.db.as_dict())
         entities.append(self.schema.as_dict())
@@ -175,6 +172,7 @@ class SnowflakeTable(Table):
         return entities
 
     def as_dict(self):
+        # type: () -> dict
         attributes = dict(self._data)
         attributes.update({"qualifiedName": self.qualified_name})
 

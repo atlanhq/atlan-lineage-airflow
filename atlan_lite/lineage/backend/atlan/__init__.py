@@ -23,6 +23,7 @@ log = LoggingMixin().log
 class AtlasBackend(Backend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
+        # type: (Operator, Union[DataSet, Asset], Union[DataSet, Asset], dict) -> None
         client = Atlas(_host, port=_port, username=_username, password=_password)
 
         try:
@@ -32,18 +33,18 @@ class AtlasBackend(Backend):
             log.info("Operator type already present on Atlas, updating type")
             client.typedefs.update(data=operator_typedef)
 
-        # try:
-        #     log.info("Creating snowflake types on Atlas")
-        #     client.typedefs.create(data=entity_typedef)
-        # except HttpError:
-        #     log.info("Snowflake types already present on Atlas, updating types")
-        #     client.typedefs.update(data=entity_typedef)
+        try:
+            log.info("Creating snowflake types on Atlas")
+            client.typedefs.create(data=entity_typedef)
+        except HttpError:
+            log.info("Snowflake types already present on Atlas, updating types")
+            client.typedefs.update(data=entity_typedef)
 
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
         _end_date = convert_to_utc(context['ti'].end_date)
 
-        inlet_list = []
+        inlet_list = [] # type: List[dict]
         if inlets:
             for entity in inlets:
                 if entity is None:
@@ -73,7 +74,7 @@ class AtlasBackend(Backend):
                                 }})
 
 
-        outlet_list = []
+        outlet_list = [] # type: List[dict]
         if outlets:
             for entity in outlets:
                 if not entity:
