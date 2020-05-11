@@ -33,12 +33,12 @@ class AtlasBackend(Backend):
             log.info("Operator type already present on Atlas, updating type")
             client.typedefs.update(data=operator_typedef)
 
-        try:
+        """try:
             log.info("Creating snowflake types on Atlas")
             client.typedefs.create(data=entity_typedef)
         except HttpError:
             log.info("Snowflake types already present on Atlas, updating types")
-            client.typedefs.update(data=entity_typedef)
+            client.typedefs.update(data=entity_typedef)"""
 
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
