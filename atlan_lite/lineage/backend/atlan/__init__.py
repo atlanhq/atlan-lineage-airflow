@@ -1,5 +1,6 @@
 from airflow.configuration import conf
 from airflow.utils.timezone import convert_to_utc
+from airflow.utils.log.logging_mixin import LoggingMixin
 
 from atlasclient.client import Atlas
 from atlasclient.exceptions import HttpError
@@ -17,6 +18,7 @@ _password = conf.get("atlas", "password")
 _port = conf.get("atlas", "port")
 _host = conf.get("atlas", "host")
 
+log = LoggingMixin().log
 
 class AtlasBackend(Backend):
     @staticmethod
@@ -24,14 +26,18 @@ class AtlasBackend(Backend):
         client = Atlas(_host, port=_port, username=_username, password=_password)
 
         try:
+            log.info("Creating operator type on Atlas")
             client.typedefs.create(data=operator_typedef)
         except HttpError:
+            log.info("Operator type already present on Atlas, updating type")
             client.typedefs.update(data=operator_typedef)
 
-        try:
-            client.typedefs.create(data=entity_typedef)
-        except HttpError:
-            client.typedefs.update(data=entity_typedef)
+        # try:
+        #     log.info("Creating snowflake types on Atlas")
+        #     client.typedefs.create(data=entity_typedef)
+        # except HttpError:
+        #     log.info("Snowflake types already present on Atlas, updating types")
+        #     client.typedefs.update(data=entity_typedef)
 
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
@@ -44,15 +50,22 @@ class AtlasBackend(Backend):
                     continue
 
                 entity.set_context(context)
-                print("INLET:", entity.as_dict())
+                try:
+                    entity_dict = entity.as_nested_dict()
+                except Exception as e:
+                    entity_dict = entity.as_dict()
+
+
+                log.info("Inlets: {}".format(entity_dict))
                 entity_dict = entity.as_dict()
+                log.info("Creating input entities")
                 try:
                     if isinstance(entity_dict, dict):
                         client.entity_post.create(data={"entity": entity_dict})
                     elif isinstance(entity_dict, list):
                         client.entity_bulk.create(data={"entities": entity_dict})
                 except Exception as e:
-                    print(e)
+                    pass
             
                 inlet_list.append({"typeName": entity.type_name,
                                 "uniqueAttributes": {
@@ -67,15 +80,20 @@ class AtlasBackend(Backend):
                     continue
 
                 entity.set_context(context)
-                print("OUTLET:", entity.as_dict())
-                entity_dict = entity.as_dict()
+                try:
+                    entity_dict = entity.as_nested_dict()
+                except Exception as e:
+                    entity_dict = entity.as_dict()
+
+                log.info("Outlets: {}".format(entity_dict)) 
+                log.info("Creating output entities")    
                 try:
                     if isinstance(entity_dict, dict):
                         client.entity_post.create(data={"entity": entity_dict})
                     elif isinstance(entity_dict, list):
                         client.entity_bulk.create(data={"entities": entity_dict})
                 except Exception as e:
-                    print(e)
+                    pass
 
                 outlet_list.append({"typeName": entity.type_name,
                                     "uniqueAttributes": {
@@ -105,6 +123,8 @@ class AtlasBackend(Backend):
             data["end_date"] = _end_date.strftime(SERIALIZED_DATE_FORMAT_STR)
 
         process = datasets.Operator(qualified_name=qualified_name, data=data)
-        print("PROCESS: ", process.as_dict())
+        log.info("Process: {}".format(process.as_dict()))
         
+        log.info("Creating process entity")
         client.entity_post.create(data={"entity": process.as_dict()})
+        log.info("Done. Created lineage")
