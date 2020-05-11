@@ -9,7 +9,7 @@ entity_typedef = {
             'name': 'cluster',
             'typeVersion': '2.0',
             'serviceType': 'atlan',
-            'description': 'Server Entity'
+            'description': 'Cluster Entity'
         },
         {
             'superTypes': [
@@ -27,7 +27,7 @@ entity_typedef = {
             'name': 'schema',
             'typeVersion': '2.0',
             'serviceType': 'atlan',
-            'description': 'Database Schema Entity'
+            'description': 'Schema Entity'
         },
         {
             'superTypes': [
@@ -46,15 +46,6 @@ entity_typedef = {
             'typeVersion': '2.0',
             'serviceType': 'atlan',
             'description': 'Snowflake Account'
-        },
-        {
-            'superTypes': [
-                'warehouse'
-            ],
-            'name': 'snowflake_warehouse',
-            'typeVersion': '2.0',
-            'serviceType': 'atlan',
-            'description': 'Snowflake Warehouse'
         },
         {
             'superTypes': [
@@ -86,40 +77,19 @@ entity_typedef = {
     ],
   'relationshipDefs': [
       {
-      'name': 'belongs_to_server',
-      'typeVersion': '2.0',
-      'relationshipCategory': 'AGGREGATION',
-      'serviceType': 'atlan',
-      'endDef1': {
-        'type': 'warehouse',
-        'name': 'server',
-        'isContainer': False,
-        'cardinality': 'SINGLE',
-        'isLegacyAttribute': True
-      },
-      'endDef2': {
-        'type': 'server',
-        'name': 'warehouse',
-        'isContainer': True,
-        'cardinality': 'SET',
-        'isLegacyAttribute': True
-      },
-      'propagateTags': 'NONE'
-    },
-    {
-      'name': 'belongs_to_warehouse',
+      'name': 'belongs_to_cluster',
       'typeVersion': '2.0',
       'relationshipCategory': 'AGGREGATION',
       'serviceType': 'atlan',
       'endDef1': {
         'type': 'database',
-        'name': 'warehouse',
+        'name': 'cluster',
         'isContainer': False,
         'cardinality': 'SINGLE',
         'isLegacyAttribute': True
       },
       'endDef2': {
-        'type': 'warehouse',
+        'type': 'cluster',
         'name': 'database',
         'isContainer': True,
         'cardinality': 'SET',
@@ -133,7 +103,7 @@ entity_typedef = {
       'relationshipCategory': 'AGGREGATION',
       'serviceType': 'atlan',
       'endDef1': {
-        'type': 'database_schema',
+        'type': 'schema',
         'name': 'database',
         'isContainer': False,
         'cardinality': 'SINGLE',
@@ -161,7 +131,7 @@ entity_typedef = {
         'isLegacyAttribute': True
       },
       'endDef2': {
-        'type': 'database_schema',
+        'type': 'parentSchema',
         'name': 'table',
         'isContainer': True,
         'cardinality': 'SET',
