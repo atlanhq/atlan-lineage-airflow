@@ -5,6 +5,11 @@ This plugin extends Airflow's native lineage support to include Snowflake entiti
 
 Check Airflow Lineage docs [here](https://airflow.apache.org/docs/stable/lineage.html)
 
+#### Prerequisites
+1. Atlas setup
+2. Airflow setup
+3. Snowflake setup
+
 #### Installation:
 
 `pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
