@@ -107,6 +107,6 @@ SnowflakeTable(table_alias = "snowflake-account-name/snowflake-database-name/sno
 
 #### Prerequisites
 You need to have the following setup before you can start using this:
-1. Apache Airflow
-2. Apache Atlas
-3. Snowflake
+1. [Apache Airflow](https://airflow.apache.org/docs/stable/start.html)
+2. [Apache Atlas](http://atlas.apache.org)
+3. [Snowflake](https://www.snowflake.com)
