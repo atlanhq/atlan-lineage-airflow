@@ -65,7 +65,7 @@ create >> get_count
 
 In the above dag, we have two tasks:
 
-1. `create` : This task creates a table on Snowflake and populates it with some data. The output of this task is the Snowflake table `a_test_table`, so this is what we configure for  the task `outlets` parameter. 
+1. `create` : This task creates a table on Snowflake and populates it with some data. The output of this task is the Snowflake table `sample_table`, so this is what we configure for  the task `outlets` parameter. 
 2. `get_count`: This task gets the number of rows present in the table created in `create` task. The input of this task is the output of the upstream task, and lets assume the output is a file. 
 
 ###### NOTE: This plugin supports Airflow convention for defining inlets and outlets
