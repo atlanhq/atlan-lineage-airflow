@@ -3,7 +3,6 @@
 Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for Snowflake operations.
 
 
-
 Let's take a look at an example dag and see what the result looks like on Atlas:
 
 ```python
@@ -83,28 +82,11 @@ The icons in green represent Airflow operators - one can see the inputs and outp
 
 `pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
 
-#### Add the following in airflow.cfg
+Follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas)
 
-1. Search for `[lineage]` and add the following
+Just change `backend` to `atlan_lite.lineage.backend.atlan.AtlasBackend`
 
-```
-[lineage]
-# what lineage backend to use
-backend = atlan_lite.lineage.backend.atlan.AtlasBackend
-```
-
-2. Add the following: 
-
-```
-[atlas]
-sasl_enabled = False
-host = atlas_host
-port = atlas_port
-username = atlas_username
-password = atlan_password
-```
-
-#### How to use
+#### Usage
 
 1. Package import 
 
