@@ -103,3 +103,10 @@ SnowflakeTable(table_alias = "snowflake-account-name/snowflake-database-name/sno
 ```
 
 *Sample dags can be found in the folder* ***sample_dags***
+
+
+#### Prerequisites
+You need to have the following setup before you can start using this:
+1. Apache Airflow
+2. Apache Atlas
+3. Snowflake
