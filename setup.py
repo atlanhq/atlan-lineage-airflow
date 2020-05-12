@@ -1,4 +1,19 @@
 from setuptools import setup, find_packages
+<<<<<<< HEAD
+=======
+import os
+import re
+
+packages = find_packages()
+
+reqs = []
+with open("requirements.txt") as f:
+    for line in f:
+        if line.startswith('git+https'):
+            continue
+        reqs.append(line.strip())
+
+>>>>>>> f168c682da7e9ab344ffd369b43dd54adeccf636
 
 __version__ = '0.0.1'
 
