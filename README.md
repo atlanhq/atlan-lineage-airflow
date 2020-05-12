@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ### Plugin to send airflow lineage data to Atlan
 
 #### Installation:
@@ -78,5 +77,3 @@ SnowflakeTable(table_alias = "snowflake-account-name/snowflake-database-name/sno
 
 *Sample dags can be found in the folder* ***sample_dags***
 
-
->>>>>>> f168c682da7e9ab344ffd369b43dd54adeccf636
