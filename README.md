@@ -73,7 +73,7 @@ In the above dag, we have two tasks:
 
 This is what lineage from the dag above is represented in Atlas:
 
-![Lineage on Atlas] (https://github.com/atlanhq/atlan-airflow-lineage-plugin/tree/master/images/atlas_lineage_readme_example.png)
+![Lineage on Atlas](/images/atlas_lineage_readme_example.png)
 
 
 The icons in green represent Airflow operators - one can see the inputs and outputs for each operator. 
