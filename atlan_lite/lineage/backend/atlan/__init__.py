@@ -77,8 +77,10 @@ class AtlanBackend(Backend):
                 log.info("Creating input entities")
                 try:
                     if isinstance(entity_dict, dict):
+                        log.info("Calling the single entity create API")
                         create(data=entity_dict)
                     elif isinstance(entity_dict, list):
+                        log.info("Calling the bulk entity create API")
                         create_bulk(data=entity_dict)
                 except Exception as e:
                     log.info("Error creating inlet entity. Error: {}".format(e))
@@ -105,8 +107,10 @@ class AtlanBackend(Backend):
                 log.info("Creating output entities")
                 try:
                     if isinstance(entity_dict, dict):
+                        log.info("Calling the single entity create API")
                         create(data=entity_dict)
                     elif isinstance(entity_dict, list):
+                        log.info("Calling the bulk entity create API")
                         create_bulk(data=entity_dict)
                 except Exception as e:
                     log.info("Error creating outlet entity. Error: {}".format(e))
