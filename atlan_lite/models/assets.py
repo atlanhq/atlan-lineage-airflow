@@ -41,7 +41,7 @@ class Entity(object):
 
     def get_guid(self):
         # type: () -> str
-        return int(str(int(hashlib.md5(self.name.encode()).hexdigest(), 16) * -1)[:10])
+        return str(int(hashlib.md5(self.name.encode()).hexdigest(), 16) * -1)[:10]
 
 
     def as_dict(self):

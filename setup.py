@@ -1,6 +1,4 @@
 from setuptools import setup, find_packages
-<<<<<<< HEAD
-=======
 import os
 import re
 
@@ -12,8 +10,6 @@ with open("requirements.txt") as f:
         if line.startswith('git+https'):
             continue
         reqs.append(line.strip())
-
->>>>>>> f168c682da7e9ab344ffd369b43dd54adeccf636
 
 __version__ = '0.0.1'
 
@@ -34,7 +30,6 @@ setup_args = dict(
     include_package_data=True,
     install_requires=reqs
 )
-
 
 if __name__ == '__main__':
     setup(**setup_args)

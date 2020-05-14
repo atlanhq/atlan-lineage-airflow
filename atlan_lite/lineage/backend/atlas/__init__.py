@@ -1,60 +1,48 @@
-from typing import List, Any, Union, NoReturn
-import requests
-import json
-
 from airflow.configuration import conf
 from airflow.utils.timezone import convert_to_utc
 from airflow.utils.log.logging_mixin import LoggingMixin
 
+from atlasclient.client import Atlas
+from atlasclient.exceptions import HttpError
+
 from atlan_lite.models.backend import Backend
+from atlan_lite.lineage.backend.atlan.typedefs import operator_typedef, entity_typedef
 from airflow.lineage import datasets
+
+import itertools
 
 SERIALIZED_DATE_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%fZ"
 
+_username = conf.get("atlas", "username")
+_password = conf.get("atlas", "password")
+_port = conf.get("atlas", "port")
+_host = conf.get("atlas", "host")
+
 log = LoggingMixin().log
 
-_url = conf.get("atlan", "url")
-_token = conf.get("atlan", "token")
 
-_headers = {
-  'token': _token,
-  'Content-Type': 'application/json'
-}
-
-def create_bulk(data):
-    # type: (List[dict]) -> Union[NoReturn, None]
-    try:
-        url = "https://{url}/entities/bulk".format(url=_url)
-        payload = json.dumps(data)
-        response = requests.request("POST", url, headers=_headers, data=payload)
-        if not response.status_code == 200:
-            message = "API call failed with response code {}. Error message: {}".format(response.status_code, response.text)
-            raise Exception(message)
-        else:
-            return None
-    except Exception as e:
-        raise Exception(e)
-
-def create(data):
-    # type: (dict) -> Union[NoReturn, None]
-    try:
-        url = "https://{url}/entities".format(url=_url)
-        payload = json.dumps(data)
-        response = requests.request("POST", url, headers=_headers, data=payload)
-        if not response.status_code == 200:
-            message = "API call failed with response code {}. Error message: {}".format(response.status_code, response.text)
-            raise Exception(message)
-        else:
-            return None
-    except Exception as e:
-        raise Exception(e)
-
-
-
-class AtlanBackend(Backend):
+class AtlasBackend(Backend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
-        # type: (Any, list, list, dict) -> None
+        # type: (Operator, Union[DataSet, Asset], Union[DataSet, Asset], dict) -> None
+        client = Atlas(_host,
+                       port=_port,
+                       username=_username,
+                       password=_password)
+
+        try:
+            log.info("Creating operator type on Atlas")
+            client.typedefs.create(data=operator_typedef)
+        except HttpError:
+            log.info("Operator type already present on Atlas, updating type")
+            client.typedefs.update(data=operator_typedef)
+
+        try:
+            log.info("Creating snowflake types on Atlas")
+            client.typedefs.create(data=entity_typedef)
+        except HttpError:
+            log.info("Snowflake types already present on Atlas, updating types")
+            client.typedefs.update(data=entity_typedef)
 
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
@@ -72,22 +60,24 @@ class AtlanBackend(Backend):
                 except Exception as e:
                     entity_dict = entity.as_dict()
 
+
                 log.info("Inlets: {}".format(entity_dict))
                 entity_dict = entity.as_dict()
                 log.info("Creating input entities")
                 try:
                     if isinstance(entity_dict, dict):
-                        create(data=entity_dict)
+                        client.entity_post.create(data={"entity": entity_dict})
                     elif isinstance(entity_dict, list):
-                        create_bulk(data=entity_dict)
+                        client.entity_bulk.create(data={"entities": entity_dict})
                 except Exception as e:
-                    log.info("Error creating inlet entity. Error: {}".format(e))
+                    pass
 
                 inlet_list.append({"typeName": entity.type_name,
                                    "uniqueAttributes": {
-                                       "qualifiedName": entity.qualified_name
+                                        "qualifiedName": entity.qualified_name
                                         }
-                                   })
+                                  })
+
 
         outlet_list = []  # type: List[dict]
         if outlets:
@@ -101,15 +91,15 @@ class AtlanBackend(Backend):
                 except Exception as e:
                     entity_dict = entity.as_dict()
 
-                log.info("Outlets: {}".format(entity_dict))
-                log.info("Creating output entities")
+                log.info("Outlets: {}".format(entity_dict)) 
+                log.info("Creating output entities")    
                 try:
                     if isinstance(entity_dict, dict):
-                        create(data=entity_dict)
+                        client.entity_post.create(data={"entity": entity_dict})
                     elif isinstance(entity_dict, list):
-                        create_bulk(data=entity_dict)
+                        client.entity_bulk.create(data={"entities": entity_dict})
                 except Exception as e:
-                    log.info("Error creating outlet entity. Error: {}".format(e))
+                    pass
 
                 outlet_list.append({"typeName": entity.type_name,
                                     "uniqueAttributes": {
@@ -117,9 +107,7 @@ class AtlanBackend(Backend):
                                     }})
 
         operator_name = operator.__class__.__name__
-        name = "{} {} ({})".format(operator.dag_id,
-                                   operator.task_id,
-                                   operator_name)
+        name = "{} {} ({})".format(operator.dag_id, operator.task_id, operator_name)
         qualified_name = "{}_{}_{}@{}".format(operator.dag_id,
                                               operator.task_id,
                                               _execution_date,
@@ -128,8 +116,7 @@ class AtlanBackend(Backend):
         data = {
             "dag_id": operator.dag_id,
             "task_id": operator.task_id,
-            "execution_date": _execution_date.strftime(
-                                        SERIALIZED_DATE_FORMAT_STR),
+            "execution_date": _execution_date.strftime(SERIALIZED_DATE_FORMAT_STR),
             "name": name,
             "inputs": inlet_list,
             "outputs": outlet_list,
@@ -137,8 +124,7 @@ class AtlanBackend(Backend):
         }
 
         if _start_date:
-            data["start_date"] = _start_date.strftime(
-                                        SERIALIZED_DATE_FORMAT_STR)
+            data["start_date"] = _start_date.strftime(SERIALIZED_DATE_FORMAT_STR)
         if _end_date:
             data["end_date"] = _end_date.strftime(SERIALIZED_DATE_FORMAT_STR)
 
@@ -146,5 +132,5 @@ class AtlanBackend(Backend):
         log.info("Process: {}".format(process.as_dict()))
 
         log.info("Creating process entity")
-        create(data=process.as_dict())
+        client.entity_post.create(data={"entity": process.as_dict()})
         log.info("Done. Created lineage")
