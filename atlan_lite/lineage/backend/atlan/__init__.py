@@ -73,7 +73,7 @@ class AtlanBackend(Backend):
                     entity_dict = entity.as_dict()
 
                 log.info("Inlets: {}".format(entity_dict))
-                entity_dict = entity.as_dict()
+                # entity_dict = entity.as_dict()
                 log.info("Creating input entities")
                 try:
                     if isinstance(entity_dict, dict):
