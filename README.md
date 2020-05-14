@@ -3,7 +3,6 @@
 Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for Snowflake operations.
 
 
-
 Let's take a look at an example dag and see what the result looks like on Atlas:
 
 ```python
@@ -66,7 +65,7 @@ create >> get_count
 
 In the above dag, we have two tasks:
 
-1. `create` : This task creates a table on Snowflake and populates it with some data. The output of this task is the Snowflake table `a_test_table`, so this is what we configure for  the task `outlets` parameter. 
+1. `create` : This task creates a table on Snowflake and populates it with some data. The output of this task is the Snowflake table `sample_table`, so this is what we configure for  the task `outlets` parameter. 
 2. `get_count`: This task gets the number of rows present in the table created in `create` task. The input of this task is the output of the upstream task, and lets assume the output is a file. 
 
 ###### NOTE: This plugin supports Airflow convention for defining inlets and outlets
@@ -83,28 +82,11 @@ The icons in green represent Airflow operators - one can see the inputs and outp
 
 `pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
 
-#### Add the following in airflow.cfg
+Follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas)
 
-1. Search for `[lineage]` and add the following
+Just change `backend` to `atlan_lite.lineage.backend.atlan.AtlasBackend`
 
-```
-[lineage]
-# what lineage backend to use
-backend = atlan_lite.lineage.backend.atlan.AtlasBackend
-```
-
-2. Add the following: 
-
-```
-[atlas]
-sasl_enabled = False
-host = atlas_host
-port = atlas_port
-username = atlas_username
-password = atlan_password
-```
-
-#### How to use
+#### Usage
 
 1. Package import 
 
@@ -121,3 +103,10 @@ SnowflakeTable(table_alias = "snowflake-account-name/snowflake-database-name/sno
 ```
 
 *Sample dags can be found in the folder* ***sample_dags***
+
+
+#### Prerequisites
+You need to have the following setup before you can start using this:
+1. [Apache Airflow](https://airflow.apache.org/docs/stable/start.html)
+2. [Apache Atlas](http://atlas.apache.org)
+3. [Snowflake](https://www.snowflake.com)
