@@ -82,9 +82,17 @@ The icons in green represent Airflow operators - one can see the inputs and outp
 
 `pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
 
-Follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas)
+1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Just change `backend` to `atlan_lite.lineage.backend.atlan.AtlasBackend`
 
-Just change `backend` to `atlan_lite.lineage.backend.atlan.AtlasBackend`
+2. To send lineage to Atlan, make the following changes to airflow.cfg
+```
+[lineage]
+backend = atlan_lite.lineage.backend.atlan.AtlanBackend
+
+[atlan]
+url = lite.atlan.com/api/v1/caspian
+token = 'my-secret-token' 
+```
 
 #### Usage
 
