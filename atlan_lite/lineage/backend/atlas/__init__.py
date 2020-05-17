@@ -7,10 +7,10 @@ from airflow.utils.log.logging_mixin import LoggingMixin
 from atlasclient.client import Atlas
 from atlasclient.exceptions import HttpError
 
-from atlan_lite.models.backend import Backend
+from atlan_lite.lineage.models.backend import Backend
 from atlan_lite.lineage.backend.atlas.typedefs import operator_typedef, entity_typedef
 # from airflow.lineage import datasets
-from atlan_lite.models.assets import Dag, Operator
+from atlan_lite.lineage.assets import Dag, Operator
 
 import itertools
 

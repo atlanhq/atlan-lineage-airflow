@@ -6,8 +6,7 @@ from airflow.configuration import conf
 from airflow.utils.timezone import convert_to_utc
 from airflow.utils.log.logging_mixin import LoggingMixin
 
-from atlan_lite.models.backend import Backend
-from airflow.lineage import datasets
+from atlan_lite.lineage.models.backend import Backend
 
 SERIALIZED_DATE_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%fZ"
 

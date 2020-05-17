@@ -5,7 +5,7 @@ from typing import List, Union
 from airflow.utils.timezone import convert_to_utc
 from airflow.utils.log.logging_mixin import LoggingMixin
 
-from atlan_lite.models.assets import Dag, Operator
+from atlan_lite.lineage.assets import Dag, Operator
 
 import itertools
 
