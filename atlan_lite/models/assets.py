@@ -92,21 +92,6 @@ class Entity(object):
 
         return d
 
-    # def hierarchial_form(self, parent=None):
-    #     # type: (Union[Entity, None]) -> dict
-    #     d = self.as_dict()
-
-    #     entities = [] # type: List[dict]
-    #     if parent:
-    #         entities.append(parent.hierarchial_form())
-    #     # entities.append(self.db.as_dict())
-    #     # entities.append(self.schema.as_dict())
-    #     entities.append(d)
-
-    #     return entities      
-        
-
-
 class Cluster(Entity):
     attributes = ["name"] # type: List[str]
     type_name = "cluster"
@@ -140,9 +125,7 @@ class SnowflakeAccount(Cluster):
 
     def __init__(self, name, data=None):
         super(Cluster, self).__init__(name=name, data=data)
-        # self.name = name
         self._qualified_name = 'cluster://' + self.name
-        # self.guid = self.get_guid()
 
 class SnowflakeDatabase(DataBase):
     type_name = "snowflake_database"
@@ -150,13 +133,6 @@ class SnowflakeDatabase(DataBase):
 
     def __init__(self, name, parent, data=None):
         super(DataBase, self).__init__(name=name, data=data)
-        # self.name = name
-        # self._qualified_name = parent['attributes']['name'] + '://' + self.name
-        # self.guid = self.get_guid()
-        # self._data['cluster'] = {
-        #     'typeName': parent['typeName'],
-        #     'guid': parent['guid']
-        # }
         self._qualified_name = parent.name + '://' + self.name
         self._data['cluster'] = parent.as_reference()
 
@@ -166,14 +142,7 @@ class SnowflakeSchema(Schema):
     
     def __init__(self, name, parent, data=None):
         super(Schema, self).__init__(name=name, data=data)
-        # self.name = name
-        # self._qualified_name = parent['attributes']['qualifiedName'] + '.' + self.name
-        # self.guid = self.get_guid()
-        # self._data['database'] = {
-        #     'typeName': parent['typeName'],
-        #     'guid': parent['guid']
-        # }
-        self._qualified_name = parent.name + '.' + self.name
+        self._qualified_name = parent.qualified_name + '.' + self.name
         self._data['database'] = parent.as_reference()
 
 
@@ -185,14 +154,7 @@ class SnowflakeTable(Table):
         super(Table, self).__init__(name=name, data=data)
         if name:
             parent = self.create_parent_entities(table_alias, connection_id)
-            # self.name = name
-            # self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
-            # self.guid = self.get_guid()
-            # self._data['parentSchema'] = {
-            #     'typeName': parent['typeName'],
-            #     'guid': parent['guid']
-            # }
-            self._qualified_name = parent.name + '/' + self.name
+            self._qualified_name = parent.qualified_name + '/' + self.name
             self._data['parentSchema'] = parent.as_reference()
 
     def parse_alias(self, string):
@@ -207,17 +169,14 @@ class SnowflakeTable(Table):
         if table_alias:
             account, db, schema = self.parse_alias(table_alias)
         self.account = SnowflakeAccount(account)
-        print("account:", self.account.as_dict())
-        print("account:", self.account.name)
-        # self.db = SnowflakeDatabase(db, self.account.as_dict())
+        print("account:", self.account.as_dict())        
         self.db = SnowflakeDatabase(db, self.account)
         print("db:", self.db.as_dict())
-        # self.schema = SnowflakeSchema(schema, self.db.as_dict())
         self.schema = SnowflakeSchema(schema, self.db)
         print("schema:", self.schema.as_dict())
-        # return self.schema.as_dict()
         return self.schema
 
+    ## TODO: change function name
     def as_nested_dict(self):
         # type: () -> List[dict]
         d = self.as_dict()
@@ -251,7 +210,7 @@ class SnowflakeTable(Table):
 
 class Dag(Entity):
     type_name = "airflow_dag"    
-    attributes = ["name", "dag_id", "execution_date", "run_id", "tasks"] 
+    attributes = ["name", "dag_id", "execution_date", "run_id"] 
         
 
 class Operator(DataSet):

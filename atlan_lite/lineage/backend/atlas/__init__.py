@@ -1,3 +1,5 @@
+from typing import List, Union
+
 from airflow.configuration import conf
 from airflow.utils.timezone import convert_to_utc
 from airflow.utils.log.logging_mixin import LoggingMixin
@@ -25,7 +27,7 @@ log = LoggingMixin().log
 class AtlasBackend(Backend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
-        # type: (object, Union[DataSet, Asset], Union[DataSet, Asset], dict) -> None
+        # type: (object, List[dict], List[dict], dict) -> None
 
         print("CONTEXT:", context)
         client = Atlas(_host,
@@ -65,7 +67,6 @@ class AtlasBackend(Backend):
 
 
                 log.info("Inlets: {}".format(entity_dict))
-                # entity_dict = entity.as_dict()
                 log.info("Creating input entities")
                 try:
                     if isinstance(entity_dict, dict):
@@ -160,27 +161,5 @@ class AtlasBackend(Backend):
         client.entity_bulk.create(data={"entities": entity_list})
         log.info("Done. Created lineage")
 
-
-        # dag_name = "{}".format(operator.dag_id)
-        # qualified_name = "{}_{}".format(operator.dag_id,
-        #                                       _execution_date
-        #                                     )
-
-        # operator_list = [{"typeName": process.type_name,
-        #                             "uniqueAttributes": {
-        #                                 "qualifiedName": process.qualified_name
-        #                             }}]
-        # data = {
-        #     "dag_id": operator.dag_id,
-        #     "execution_date": _execution_date.strftime(SERIALIZED_DATE_FORMAT_STR),
-        #     "name": dag_name,
-        #     "tasks": operator_list,
-        #     "run_id": context['dag_run'].run_id
-        # }
-        # dag = Dag(qualified_name=qualified_name, data=data)
-        # log.info("Dag: {}".format(dag.as_dict()))
-        # log.info("Creating dag entity")
-        # client.entity_post.create(data={"entity": dag.as_dict()})
-        # log.info("Done. Created lineage")
 
 
