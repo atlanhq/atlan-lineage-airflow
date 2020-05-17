@@ -25,7 +25,9 @@ log = LoggingMixin().log
 class AtlasBackend(Backend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
-        # type: (Operator, Union[DataSet, Asset], Union[DataSet, Asset], dict) -> None
+        # type: (object, Union[DataSet, Asset], Union[DataSet, Asset], dict) -> None
+
+        print("CONTEXT:", context)
         client = Atlas(_host,
                        port=_port,
                        username=_username,
@@ -122,6 +124,7 @@ class AtlasBackend(Backend):
         # client.entity_post.create(data={"entity": dag.as_dict()})
         # log.info("Created dag entity")
 
+        entity_list = [dag.as_dict()]
 
         operator_name = operator.__class__.__name__
         name = "{}".format(operator.task_id)
@@ -138,7 +141,7 @@ class AtlasBackend(Backend):
             "inputs": inlet_list,
             "outputs": outlet_list,
             "command": operator.lineage_data,
-            "dag": dag.as_dict()
+            "airflow_dag": dag.as_reference()
         }
 
         if _start_date:
@@ -149,8 +152,12 @@ class AtlasBackend(Backend):
         process = Operator(qualified_name=qualified_name, data=data)
         log.info("Process: {}".format(process.as_dict()))
 
+        entity_list.append(process.as_dict())
+        print("ENTITY:", entity_list)
+
         log.info("Creating process entity")
-        client.entity_post.create(data={"entity": process.as_dict()})
+        # client.entity_post.create(data={"entity": process.as_dict()})
+        client.entity_bulk.create(data={"entities": entity_list})
         log.info("Done. Created lineage")
 
 

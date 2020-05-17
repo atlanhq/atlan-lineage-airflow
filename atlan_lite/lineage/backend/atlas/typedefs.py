@@ -117,17 +117,18 @@ entity_typedef = {
         'name': 'has_task',
         'typeVersion': '2.0',
         'relationshipCategory': 'COMPOSITION',
+        'relationshipLabel': '__airflow_dag.airflow_operators',
         'serviceType': 'atlan',
         'endDef1': {
           'type': 'airflow_dag',
-          'name': 'tasks',
+          'name': 'airflow_operators',
           'isContainer': True,
           'cardinality': 'SET',
           'isLegacyAttribute': True
         },
         'endDef2': {
           'type': 'airflow_operator',
-          'name': 'dag',
+          'name': 'airflow_dag',
           'isContainer': False,
           'cardinality': 'SINGLE',
           'isLegacyAttribute': True
@@ -138,6 +139,7 @@ entity_typedef = {
       'name': 'belongs_to_cluster',
       'typeVersion': '2.0',
       'relationshipCategory': 'AGGREGATION',
+      'relationshipLabel': '__database.cluster',
       'serviceType': 'atlan',
       'endDef1': {
         'type': 'database',
@@ -148,7 +150,7 @@ entity_typedef = {
       },
       'endDef2': {
         'type': 'cluster',
-        'name': 'database',
+        'name': 'databases',
         'isContainer': True,
         'cardinality': 'SET',
         'isLegacyAttribute': True
@@ -159,6 +161,7 @@ entity_typedef = {
       'name': 'belongs_to_database',
       'typeVersion': '2.0',
       'relationshipCategory': 'AGGREGATION',
+      'relationshipLabel': '__schema.database',
       'serviceType': 'atlan',
       'endDef1': {
         'type': 'schema',
@@ -169,7 +172,7 @@ entity_typedef = {
       },
       'endDef2': {
         'type': 'database',
-        'name': 'schema',
+        'name': 'schemas',
         'isContainer': True,
         'cardinality': 'SET',
         'isLegacyAttribute': True
@@ -180,6 +183,7 @@ entity_typedef = {
       'name': 'belongs_to_schema',
       'typeVersion': '2.0',
       'relationshipCategory': 'AGGREGATION',
+      'relationshipLabel': '__table.schema',
       'serviceType': 'atlan',
       'endDef1': {
         'type': 'table',
@@ -190,7 +194,7 @@ entity_typedef = {
       },
       'endDef2': {
         'type': 'schema',
-        'name': 'table',
+        'name': 'tables',
         'isContainer': True,
         'cardinality': 'SET',
         'isLegacyAttribute': True

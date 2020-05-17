@@ -15,8 +15,11 @@ class Entity(object):
     def __init__(self, qualified_name=None, data=None, **kwargs):
         self._qualified_name = qualified_name
         self.context = None
+        self._guid = None
         self._data = dict()
-        # self.name  # type: str
+
+        if "name" in kwargs:
+            self._name = kwargs['name']
 
         self._data.update(dict((key, value) for key, value in six.iteritems(kwargs)
                                if key in set(self.attributes)))
@@ -24,6 +27,12 @@ class Entity(object):
         if data:
             if "qualifiedName" in data:
                 self._qualified_name = data.pop("qualifiedName")
+            
+            if "name" in data:
+                self._name = data["name"]
+            
+            if "guid" in data:
+                self._guid = data.pop("guid")
 
             self._data = dict((key, value) for key, value in six.iteritems(data)
                               if key in set(self.attributes))
@@ -41,10 +50,20 @@ class Entity(object):
 
         return self._qualified_name
 
-    def get_guid(self):
+    @property
+    def name(self):
         # type: () -> str
-        return str(int(hashlib.md5(self.name.encode()).hexdigest(), 16) * -1)[:10]
+        return self._name
 
+    @property
+    def guid(self):
+        # type: () -> Union[str, None]
+        if self.name:
+            self._guid = str(int(hashlib.md5(self.name.encode()).hexdigest(), 16) * -1)[:10]
+        else:
+            self._guid = None
+        return self._guid
+            
 
     def as_dict(self):
         # type: () -> dict
@@ -62,6 +81,30 @@ class Entity(object):
             "guid": self.guid
         }
         return d
+
+
+    def as_reference(self):
+        # type: () -> dict
+        d = {
+            "typeName": self.type_name,
+            "guid": self.guid
+        }
+
+        return d
+
+    # def hierarchial_form(self, parent=None):
+    #     # type: (Union[Entity, None]) -> dict
+    #     d = self.as_dict()
+
+    #     entities = [] # type: List[dict]
+    #     if parent:
+    #         entities.append(parent.hierarchial_form())
+    #     # entities.append(self.db.as_dict())
+    #     # entities.append(self.schema.as_dict())
+    #     entities.append(d)
+
+    #     return entities      
+        
 
 
 class Cluster(Entity):
@@ -97,9 +140,9 @@ class SnowflakeAccount(Cluster):
 
     def __init__(self, name, data=None):
         super(Cluster, self).__init__(name=name, data=data)
-        self.name = name
+        # self.name = name
         self._qualified_name = 'cluster://' + self.name
-        self.guid = self.get_guid()
+        # self.guid = self.get_guid()
 
 class SnowflakeDatabase(DataBase):
     type_name = "snowflake_database"
@@ -107,9 +150,9 @@ class SnowflakeDatabase(DataBase):
 
     def __init__(self, name, parent, data=None):
         super(DataBase, self).__init__(name=name, data=data)
-        self.name = name
+        # self.name = name
         self._qualified_name = parent['attributes']['name'] + '://' + self.name
-        self.guid = self.get_guid()
+        # self.guid = self.get_guid()
         self._data['cluster'] = {
             'typeName': parent['typeName'],
             'guid': parent['guid']
@@ -121,9 +164,9 @@ class SnowflakeSchema(Schema):
     
     def __init__(self, name, parent, data=None):
         super(Schema, self).__init__(name=name, data=data)
-        self.name = name
+        # self.name = name
         self._qualified_name = parent['attributes']['qualifiedName'] + '.' + self.name
-        self.guid = self.get_guid()
+        # self.guid = self.get_guid()
         self._data['database'] = {
             'typeName': parent['typeName'],
             'guid': parent['guid']
@@ -138,7 +181,7 @@ class SnowflakeTable(Table):
         super(Table, self).__init__(name=name, data=data)
         if name:
             parent = self.create_parent_entities(table_alias, connection_id)
-            self.name = name
+            # self.name = name
             self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
             # self.guid = self.get_guid()
             self._data['parentSchema'] = {
@@ -158,8 +201,12 @@ class SnowflakeTable(Table):
         if table_alias:
             account, db, schema = self.parse_alias(table_alias)
         self.account = SnowflakeAccount(account)
+        print("account:", self.account.as_dict())
+        print("account:", self.account.name)
         self.db = SnowflakeDatabase(db, self.account.as_dict())
+        print("db:", self.db.as_dict())
         self.schema = SnowflakeSchema(schema, self.db.as_dict())
+        print("schema:", self.schema.as_dict())
         return self.schema.as_dict()
 
     def as_nested_dict(self):
@@ -198,9 +245,9 @@ class Dag(Entity):
     attributes = ["name", "dag_id", "execution_date", "run_id", "tasks"] 
         
 
-class Operator(Entity):
+class Operator(DataSet):
     type_name = "airflow_operator"
 
     # todo we can derive this from the spec
     attributes = ["dag_id", "task_id", "command", "conn_id", "name", "execution_date",
-                  "start_date", "end_date", "inputs", "outputs", "dag"]
+                  "start_date", "end_date", "inputs", "outputs", "airflow_dag"]
