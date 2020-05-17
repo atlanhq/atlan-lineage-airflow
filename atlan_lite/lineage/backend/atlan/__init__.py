@@ -73,7 +73,6 @@ class AtlanBackend(Backend):
                     entity_dict = entity.as_dict()
 
                 log.info("Inlets: {}".format(entity_dict))
-                # entity_dict = entity.as_dict()
                 log.info("Creating input entities")
                 try:
                     if isinstance(entity_dict, dict):
@@ -121,9 +120,7 @@ class AtlanBackend(Backend):
                                     }})
 
         operator_name = operator.__class__.__name__
-        name = "{} {} ({})".format(operator.dag_id,
-                                   operator.task_id,
-                                   operator_name)
+        name = "{}".format(operator.task_id)
         qualified_name = "{}_{}_{}@{}".format(operator.dag_id,
                                               operator.task_id,
                                               _execution_date,

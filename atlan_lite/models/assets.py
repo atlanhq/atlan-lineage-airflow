@@ -1,9 +1,10 @@
 import six
 
-from typing import List
+from typing import List, Tuple, Union
 from jinja2 import Environment
 
 from airflow.lineage.datasets import *
+from airflow.lineage.datasets import DataSet
 
 import hashlib
 
@@ -15,6 +16,7 @@ class Entity(object):
         self._qualified_name = qualified_name
         self.context = None
         self._data = dict()
+        # self.name  # type: str
 
         self._data.update(dict((key, value) for key, value in six.iteritems(kwargs)
                                if key in set(self.attributes)))
@@ -27,7 +29,7 @@ class Entity(object):
                               if key in set(self.attributes))
 
     def set_context(self, context):
-        # type: () -> None
+        # type: (dict) -> None
         self.context = context
 
     @property
@@ -145,7 +147,7 @@ class SnowflakeTable(Table):
             }
 
     def parse_alias(self, string):
-        # type: (str) -> Tuple(str, str, str)
+        # type: (str) -> Tuple[str, str, str]
         account = string.split('/')[0]
         db = string.split('/')[1]
         schema = string.split('/')[2]
@@ -153,7 +155,8 @@ class SnowflakeTable(Table):
 
     def create_parent_entities(self, table_alias, connection_id):
         # type: (Union[str, None], Union[str, None]) -> dict 
-        account, db, schema = self.parse_alias(table_alias)
+        if table_alias:
+            account, db, schema = self.parse_alias(table_alias)
         self.account = SnowflakeAccount(account)
         self.db = SnowflakeDatabase(db, self.account.as_dict())
         self.schema = SnowflakeSchema(schema, self.db.as_dict())
@@ -190,6 +193,14 @@ class SnowflakeTable(Table):
         }
         return d
 
-            
+class Dag(Entity):
+    type_name = "airflow_dag"    
+    attributes = ["name", "dag_id", "execution_date", "run_id", "tasks"] 
         
 
+class Operator(Entity):
+    type_name = "airflow_operator"
+
+    # todo we can derive this from the spec
+    attributes = ["dag_id", "task_id", "command", "conn_id", "name", "execution_date",
+                  "start_date", "end_date", "inputs", "outputs", "dag"]

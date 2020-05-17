@@ -1,5 +1,7 @@
 from airflow.lineage.backend.atlas.typedefs import operator_typedef
 
+## TODO: sep. these entity defs out into sep. variables
+
 entity_typedef = {
     'entityDefs': [
         {
@@ -42,10 +44,10 @@ entity_typedef = {
             'superTypes': [
                 'cluster'
             ],
-            'name': 'snowflake_account',
+            'name': 'snowflake_cluster',
             'typeVersion': '2.0',
             'serviceType': 'atlan',
-            'description': 'Snowflake Account'
+            'description': 'Snowflake Cluster'
         },
         {
             'superTypes': [
@@ -58,7 +60,7 @@ entity_typedef = {
         },
         {
             'superTypes': [
-                'database_schema'
+                'schema'
             ],
             'name': 'snowflake_schema',
             'typeVersion': '2.0',
@@ -73,9 +75,65 @@ entity_typedef = {
             'typeVersion': '2.0',
             'serviceType': 'atlan',
             'description': 'Snowflake Table'
+        },
+        {
+          'superTypes': [
+                'Asset'
+            ],
+            'name': 'airflow_dag',
+            'typeVersion': '2.0',
+            'serviceType': 'atlan',
+            'description': 'Airflow DAG',
+            'attributeDefs': [
+              {
+                'name': 'dag_id',
+                'typeName': 'string',
+                'isOptional': False,
+                'cardinality': "SINGLE",
+                'isUnique': False,
+                'isIndexable': True
+              },
+              {
+                'name': 'execution_date',
+                'typeName': 'date',
+                'isOptional': False,
+                'cardinality': "SINGLE",
+                'isUnique': False,
+                'isIndexable': True
+              },
+              {
+                'name': 'run_id',
+                'typeName': 'string',
+                'isOptional': False,
+                'cardinality': "SINGLE",
+                'isUnique': False,
+                'isIndexable': True
+              }
+            ]
         }
     ],
   'relationshipDefs': [
+      {
+        'name': 'has_task',
+        'typeVersion': '2.0',
+        'relationshipCategory': 'COMPOSITION',
+        'serviceType': 'atlan',
+        'endDef1': {
+          'type': 'airflow_dag',
+          'name': 'tasks',
+          'isContainer': True,
+          'cardinality': 'SET',
+          'isLegacyAttribute': True
+        },
+        'endDef2': {
+          'type': 'airflow_operator',
+          'name': 'dag',
+          'isContainer': False,
+          'cardinality': 'SINGLE',
+          'isLegacyAttribute': True
+        },
+        'propagateTags': 'NONE'
+      },
       {
       'name': 'belongs_to_cluster',
       'typeVersion': '2.0',
@@ -125,13 +183,13 @@ entity_typedef = {
       'serviceType': 'atlan',
       'endDef1': {
         'type': 'table',
-        'name': 'schema',
+        'name': 'parentSchema',
         'isContainer': False,
         'cardinality': 'SINGLE',
         'isLegacyAttribute': True
       },
       'endDef2': {
-        'type': 'parentSchema',
+        'type': 'schema',
         'name': 'table',
         'isContainer': True,
         'cardinality': 'SET',

@@ -6,8 +6,9 @@ from atlasclient.client import Atlas
 from atlasclient.exceptions import HttpError
 
 from atlan_lite.models.backend import Backend
-from atlan_lite.lineage.backend.atlan.typedefs import operator_typedef, entity_typedef
-from airflow.lineage import datasets
+from atlan_lite.lineage.backend.atlas.typedefs import operator_typedef, entity_typedef
+# from airflow.lineage import datasets
+from atlan_lite.models.assets import Dag, Operator
 
 import itertools
 
@@ -62,7 +63,7 @@ class AtlasBackend(Backend):
 
 
                 log.info("Inlets: {}".format(entity_dict))
-                entity_dict = entity.as_dict()
+                # entity_dict = entity.as_dict()
                 log.info("Creating input entities")
                 try:
                     if isinstance(entity_dict, dict):
@@ -70,7 +71,7 @@ class AtlasBackend(Backend):
                     elif isinstance(entity_dict, list):
                         client.entity_bulk.create(data={"entities": entity_dict})
                 except Exception as e:
-                    pass
+                    log.info("Failed to create inlets. Error: {}".format(e))
 
                 inlet_list.append({"typeName": entity.type_name,
                                    "uniqueAttributes": {
@@ -99,15 +100,31 @@ class AtlasBackend(Backend):
                     elif isinstance(entity_dict, list):
                         client.entity_bulk.create(data={"entities": entity_dict})
                 except Exception as e:
-                    pass
+                    log.info("Failed to create outlets. Error: {}".format(e))
 
                 outlet_list.append({"typeName": entity.type_name,
                                     "uniqueAttributes": {
                                         "qualifiedName": entity.qualified_name
                                     }})
 
+        
+        dag_name = "{}".format(operator.dag_id)
+        qualified_name = "{}_{}".format(operator.dag_id,_execution_date)
+        data = {
+            "dag_id": operator.dag_id,
+            "execution_date": _execution_date.strftime(SERIALIZED_DATE_FORMAT_STR),
+            "name": dag_name,
+            "run_id": context['dag_run'].run_id
+        }
+        dag = Dag(qualified_name=qualified_name, data=data)
+        log.info("Dag: {}".format(dag.as_dict()))
+        # log.info("Creating dag entity")
+        # client.entity_post.create(data={"entity": dag.as_dict()})
+        # log.info("Created dag entity")
+
+
         operator_name = operator.__class__.__name__
-        name = "{} {} ({})".format(operator.dag_id, operator.task_id, operator_name)
+        name = "{}".format(operator.task_id)
         qualified_name = "{}_{}_{}@{}".format(operator.dag_id,
                                               operator.task_id,
                                               _execution_date,
@@ -121,6 +138,7 @@ class AtlasBackend(Backend):
             "inputs": inlet_list,
             "outputs": outlet_list,
             "command": operator.lineage_data,
+            "dag": dag.as_dict()
         }
 
         if _start_date:
@@ -128,9 +146,34 @@ class AtlasBackend(Backend):
         if _end_date:
             data["end_date"] = _end_date.strftime(SERIALIZED_DATE_FORMAT_STR)
 
-        process = datasets.Operator(qualified_name=qualified_name, data=data)
+        process = Operator(qualified_name=qualified_name, data=data)
         log.info("Process: {}".format(process.as_dict()))
 
         log.info("Creating process entity")
         client.entity_post.create(data={"entity": process.as_dict()})
         log.info("Done. Created lineage")
+
+
+        # dag_name = "{}".format(operator.dag_id)
+        # qualified_name = "{}_{}".format(operator.dag_id,
+        #                                       _execution_date
+        #                                     )
+
+        # operator_list = [{"typeName": process.type_name,
+        #                             "uniqueAttributes": {
+        #                                 "qualifiedName": process.qualified_name
+        #                             }}]
+        # data = {
+        #     "dag_id": operator.dag_id,
+        #     "execution_date": _execution_date.strftime(SERIALIZED_DATE_FORMAT_STR),
+        #     "name": dag_name,
+        #     "tasks": operator_list,
+        #     "run_id": context['dag_run'].run_id
+        # }
+        # dag = Dag(qualified_name=qualified_name, data=data)
+        # log.info("Dag: {}".format(dag.as_dict()))
+        # log.info("Creating dag entity")
+        # client.entity_post.create(data={"entity": dag.as_dict()})
+        # log.info("Done. Created lineage")
+
+
