@@ -151,12 +151,14 @@ class SnowflakeDatabase(DataBase):
     def __init__(self, name, parent, data=None):
         super(DataBase, self).__init__(name=name, data=data)
         # self.name = name
-        self._qualified_name = parent['attributes']['name'] + '://' + self.name
+        # self._qualified_name = parent['attributes']['name'] + '://' + self.name
         # self.guid = self.get_guid()
-        self._data['cluster'] = {
-            'typeName': parent['typeName'],
-            'guid': parent['guid']
-        }
+        # self._data['cluster'] = {
+        #     'typeName': parent['typeName'],
+        #     'guid': parent['guid']
+        # }
+        self._qualified_name = parent.name + '://' + self.name
+        self._data['cluster'] = parent.as_reference()
 
 class SnowflakeSchema(Schema):
     type_name = "snowflake_schema"
@@ -165,12 +167,14 @@ class SnowflakeSchema(Schema):
     def __init__(self, name, parent, data=None):
         super(Schema, self).__init__(name=name, data=data)
         # self.name = name
-        self._qualified_name = parent['attributes']['qualifiedName'] + '.' + self.name
+        # self._qualified_name = parent['attributes']['qualifiedName'] + '.' + self.name
         # self.guid = self.get_guid()
-        self._data['database'] = {
-            'typeName': parent['typeName'],
-            'guid': parent['guid']
-        }
+        # self._data['database'] = {
+        #     'typeName': parent['typeName'],
+        #     'guid': parent['guid']
+        # }
+        self._qualified_name = parent.name + '.' + self.name
+        self._data['database'] = parent.as_reference()
 
 
 class SnowflakeTable(Table):
@@ -182,12 +186,14 @@ class SnowflakeTable(Table):
         if name:
             parent = self.create_parent_entities(table_alias, connection_id)
             # self.name = name
-            self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
+            # self._qualified_name = parent['attributes']['qualifiedName'] + '/' + self.name
             # self.guid = self.get_guid()
-            self._data['parentSchema'] = {
-                'typeName': parent['typeName'],
-                'guid': parent['guid']
-            }
+            # self._data['parentSchema'] = {
+            #     'typeName': parent['typeName'],
+            #     'guid': parent['guid']
+            # }
+            self._qualified_name = parent.name + '/' + self.name
+            self._data['parentSchema'] = parent.as_reference()
 
     def parse_alias(self, string):
         # type: (str) -> Tuple[str, str, str]
@@ -197,17 +203,20 @@ class SnowflakeTable(Table):
         return account, db, schema
 
     def create_parent_entities(self, table_alias, connection_id):
-        # type: (Union[str, None], Union[str, None]) -> dict 
+        # type: (Union[str, None], Union[str, None]) -> object
         if table_alias:
             account, db, schema = self.parse_alias(table_alias)
         self.account = SnowflakeAccount(account)
         print("account:", self.account.as_dict())
         print("account:", self.account.name)
-        self.db = SnowflakeDatabase(db, self.account.as_dict())
+        # self.db = SnowflakeDatabase(db, self.account.as_dict())
+        self.db = SnowflakeDatabase(db, self.account)
         print("db:", self.db.as_dict())
-        self.schema = SnowflakeSchema(schema, self.db.as_dict())
+        # self.schema = SnowflakeSchema(schema, self.db.as_dict())
+        self.schema = SnowflakeSchema(schema, self.db)
         print("schema:", self.schema.as_dict())
-        return self.schema.as_dict()
+        # return self.schema.as_dict()
+        return self.schema
 
     def as_nested_dict(self):
         # type: () -> List[dict]
