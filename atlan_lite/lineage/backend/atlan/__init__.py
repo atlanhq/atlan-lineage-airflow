@@ -56,21 +56,12 @@ class AtlanBackend(Backend):
     def send_lineage(operator, inlets, outlets, context):
         # type: (Any, list, list, dict) -> None
 
-        _execution_date = convert_to_utc(context['ti'].execution_date)
-        _start_date = convert_to_utc(context['ti'].start_date)
-        _end_date = convert_to_utc(context['ti'].end_date)
+        inlet_list, outlet_list, dag_op_list = Backend.create_lineage_meta(operator, inlets, outlets, context)
 
-        inlet_list = []  # type: List[dict]
         if inlets:
-            for entity in inlets:
-                if entity is None:
+            for entity_dict in inlet_list:
+                if entity_dict is None:
                     continue
-
-                entity.set_context(context)
-                try:
-                    entity_dict = entity.as_nested_dict()
-                except Exception as e:
-                    entity_dict = entity.as_dict()
 
                 log.info("Inlets: {}".format(entity_dict))
                 log.info("Creating input entities")
@@ -82,28 +73,15 @@ class AtlanBackend(Backend):
                         log.info("Calling the bulk entity create API")
                         create_bulk(data=entity_dict)
                 except Exception as e:
-                    log.info("Error creating inlet entity. Error: {}".format(e))
+                    log.info("Failed to create inlets. Error: {}".format(e))
 
-                inlet_list.append({"typeName": entity.type_name,
-                                   "uniqueAttributes": {
-                                       "qualifiedName": entity.qualified_name
-                                        }
-                                   })
-
-        outlet_list = []  # type: List[dict]
         if outlets:
-            for entity in outlets:
-                if not entity:
+            for entity_dict in outlet_list:
+                if not entity_dict:
                     continue
 
-                entity.set_context(context)
-                try:
-                    entity_dict = entity.as_nested_dict()
-                except Exception as e:
-                    entity_dict = entity.as_dict()
-
-                log.info("Outlets: {}".format(entity_dict))
-                log.info("Creating output entities")
+                log.info("Outlets: {}".format(entity_dict)) 
+                log.info("Creating output entities")    
                 try:
                     if isinstance(entity_dict, dict):
                         log.info("Calling the single entity create API")
@@ -112,40 +90,9 @@ class AtlanBackend(Backend):
                         log.info("Calling the bulk entity create API")
                         create_bulk(data=entity_dict)
                 except Exception as e:
-                    log.info("Error creating outlet entity. Error: {}".format(e))
+                    log.info("Failed to create outlets. Error: {}".format(e))
 
-                outlet_list.append({"typeName": entity.type_name,
-                                    "uniqueAttributes": {
-                                        "qualifiedName": entity.qualified_name
-                                    }})
-
-        operator_name = operator.__class__.__name__
-        name = "{}".format(operator.task_id)
-        qualified_name = "{}_{}_{}@{}".format(operator.dag_id,
-                                              operator.task_id,
-                                              _execution_date,
-                                              operator_name)
-
-        data = {
-            "dag_id": operator.dag_id,
-            "task_id": operator.task_id,
-            "execution_date": _execution_date.strftime(
-                                        SERIALIZED_DATE_FORMAT_STR),
-            "name": name,
-            "inputs": inlet_list,
-            "outputs": outlet_list,
-            "command": operator.lineage_data,
-        }
-
-        if _start_date:
-            data["start_date"] = _start_date.strftime(
-                                        SERIALIZED_DATE_FORMAT_STR)
-        if _end_date:
-            data["end_date"] = _end_date.strftime(SERIALIZED_DATE_FORMAT_STR)
-
-        process = datasets.Operator(qualified_name=qualified_name, data=data)
-        log.info("Process: {}".format(process.as_dict()))
-
-        log.info("Creating process entity")
-        create(data=process.as_dict())
+        
+        log.info("Creating dag and operator entities")
+        create_bulk(data=dag_op_list)
         log.info("Done. Created lineage")
