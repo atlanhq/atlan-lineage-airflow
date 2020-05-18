@@ -21,30 +21,41 @@ args = {"owner": "Atlan", "start_date": airflow.utils.dates.days_ago(2)}
 dag = DAG(dag_id="customer_distribution_apac", default_args=args, schedule_interval=None)
 
 with dag:
-    customer_nation_join = SnowflakeOperator(
-                                task_id="customer_nation_join", 
-                                sql="create table biw.private.customer_enriched as select c.c_custkey, c.c_acctbal, c.c_mktsegment, n.n_nationkey, n.n_name from biw.raw.customer c inner join biw.raw.nation n on c.c_nationkey = n.n_nationkey",
-                                snowflake_conn_id="snowflake_common",
-                                inlets: {"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/customer", name = "customer"),SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/nation", name = "nation")]},
-                                outlets: {"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/customer_enriched", name = "customer_enriched")]}
-                            )
+  customer_nation_join = SnowflakeOperator(
+    task_id = "customer_nation_join",
+    sql = "create table biw.private.customer_enriched as select c.c_custkey, c.c_acctbal, c.c_mktsegment, n.n_nationkey, n.n_name from biw.raw.customer c inner join biw.raw.nation n on c.c_nationkey = n.n_nationkey",
+    snowflake_conn_id = "snowflake_common",
+    inlets: {
+      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/raw/customer", name = "customer"), SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/raw/nation", name = "nation")]
+    },
+    outlets: {
+      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/private/customer_enriched", name = "customer_enriched")]
+    }
+  )
 
-    filter_apac = SnowflakeOperator(
-                        task_id="filter_apac", 
-                        sql="create table biw.private.customer_apac as select * from biw.private.customer_enriched where n_name in ('CHINA', 'INDIA', 'INDONESIA', 'VIETNAM', 'PAKISTAN', 'NEW ZEALEAND', 'AUSTRALIA')",
-                        snowflake_conn_id="snowflake_common",
-                        inlets: {"auto":True},
-                        outlets: {"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/customer_apac", name = "customer_apac")]}
-                    )
+filter_apac = SnowflakeOperator(
+  task_id = "filter_apac",
+  sql = "create table biw.private.customer_apac as select * from biw.private.customer_enriched where n_name in ('CHINA', 'INDIA', 'INDONESIA', 'VIETNAM', 'PAKISTAN', 'NEW ZEALEAND', 'AUSTRALIA')",
+  snowflake_conn_id = "snowflake_common",
+  inlets: {
+    "auto": True
+  },
+  outlets: {
+    "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/private/customer_apac", name = "customer_apac")]
+  }
+)
 
-    aggregate_apac = SnowflakeOperator(
-                        task_id="aggregate_apac", 
-                        sql="create table biw.cubes.customer_distribution as select count(*) as num_customers, n_name as nation from biw.private.customer_apac group by n_name",
-                        snowflake_conn_id="snowflake_common",
-                        inlets: {"auto":True}
-                        outlets: {"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/cubes/customer_distribution", name = "customer_distribution")]}
-                    )
-
+aggregate_apac = SnowflakeOperator(
+  task_id = "aggregate_apac",
+  sql = "create table biw.cubes.customer_distribution as select count(*) as num_customers, n_name as nation from biw.private.customer_apac group by n_name",
+  snowflake_conn_id = "snowflake_common",
+  inlets: {
+    "auto": True
+  }
+  outlets: {
+    "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/cubes/customer_distribution", name = "customer_distribution")]
+  }
+)
 customer_nation_join >> filter_apac >> aggregate_apac
 ```
 
