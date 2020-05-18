@@ -15,8 +15,7 @@
 # under the License.
 #
 
-from airflow.lineage.backend.atlas.typedefs import (  # noqa: F401, F403
-                                        operator_typedef)  # noqa: F401, F403
+from airflow.lineage.backend.atlas.typedefs import operator_typedef  # type: ignore # noqa: F401, F403, E501
 
 
 # TODO: sep. these entity defs out into sep. variables

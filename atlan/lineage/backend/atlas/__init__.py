@@ -14,13 +14,13 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-from typing import List
+from typing import List  # noqa: F401
 
-from airflow.configuration import conf
-from airflow.utils.log.logging_mixin import LoggingMixin
+from airflow.configuration import conf  # type: ignore
+from airflow.utils.log.logging_mixin import LoggingMixin  # type: ignore
 
-from atlasclient.client import Atlas
-from atlasclient.exceptions import HttpError
+from atlasclient.client import Atlas  # type: ignore
+from atlasclient.exceptions import HttpError  # type: ignore
 
 from atlan.lineage.models.backend import Backend
 from atlan.lineage.backend.atlas.typedefs import (operator_typedef,
@@ -40,7 +40,7 @@ log = LoggingMixin().log
 class AtlasBackend(Backend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
-        # type: (object, List[object], List[object], dict) -> None
+        # type: (object, list, list, dict) -> None
 
         client = Atlas(_host,
                        port=_port,

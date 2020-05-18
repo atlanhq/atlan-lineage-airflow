@@ -15,12 +15,12 @@
 # under the License.
 #
 
-from airflow.lineage.backend.atlas import AtlasBackend
+from airflow.lineage.backend.atlas import AtlasBackend  # type: ignore
 
 from typing import List
 
-from airflow.utils.timezone import convert_to_utc
-from airflow.utils.log.logging_mixin import LoggingMixin
+from airflow.utils.timezone import convert_to_utc  # type: ignore
+from airflow.utils.log.logging_mixin import LoggingMixin  # type: ignore
 
 from atlan.lineage.assets import Dag, Operator
 
@@ -34,7 +34,6 @@ log = LoggingMixin().log
 class Backend(AtlasBackend):
     @staticmethod
     def create_lineage_meta(operator, inlets, outlets, context):
-        # type: (object, list, list, dict) -> list, list, list
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
         _end_date = convert_to_utc(context['ti'].end_date)

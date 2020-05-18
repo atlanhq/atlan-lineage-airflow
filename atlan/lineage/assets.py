@@ -20,8 +20,8 @@ import six
 from typing import List, Tuple, Union
 from jinja2 import Environment
 
-from airflow.lineage.datasets import *  # noqa: F401, F403
-from airflow.lineage.datasets import DataSet
+from airflow.lineage.datasets import *  # type: ignore # noqa: F401, F403
+from airflow.lineage.datasets import DataSet  # type: ignore
 
 import hashlib
 
@@ -113,7 +113,7 @@ class Entity(object):
 
 
 class Cluster(Entity):
-    attributes = ["name"]  # type: List[str]
+    attributes = ["name"]
     type_name = "cluster"
 
     def __init__(self, name=None, data=None):

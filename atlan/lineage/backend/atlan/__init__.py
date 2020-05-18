@@ -14,12 +14,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-from typing import List, Any, Union, NoReturn
+from typing import List, Any, Union, NoReturn  # noqa: F401
 import requests
 import json
 
-from airflow.configuration import conf
-from airflow.utils.log.logging_mixin import LoggingMixin
+from airflow.configuration import conf  # type: ignore
+from airflow.utils.log.logging_mixin import LoggingMixin  # type: ignore
 
 from atlan.lineage.models.backend import Backend
 
@@ -71,7 +71,7 @@ def create(data):
 class AtlanBackend(Backend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
-        # type: (Any, list, list, dict) -> None
+        # type: (object, list, list, dict) -> None
 
         inlet_list, outlet_list, dag_op_list = Backend.create_lineage_meta(
                                                                     operator,
