@@ -1,7 +1,6 @@
 from typing import List, Union
 
 from airflow.configuration import conf
-from airflow.utils.timezone import convert_to_utc
 from airflow.utils.log.logging_mixin import LoggingMixin
 
 from atlasclient.client import Atlas
@@ -9,12 +8,8 @@ from atlasclient.exceptions import HttpError
 
 from atlan_lite.lineage.models.backend import Backend
 from atlan_lite.lineage.backend.atlas.typedefs import operator_typedef, entity_typedef
-# from airflow.lineage import datasets
-from atlan_lite.lineage.assets import Dag, Operator
 
 import itertools
-
-SERIALIZED_DATE_FORMAT_STR = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 _username = conf.get("atlas", "username")
 _password = conf.get("atlas", "password")
@@ -27,9 +22,8 @@ log = LoggingMixin().log
 class AtlasBackend(Backend):
     @staticmethod
     def send_lineage(operator, inlets, outlets, context):
-        # type: (object, List[dict], List[dict], dict) -> None
+        # type: (object, List[object], List[object], dict) -> None
 
-        print("CONTEXT:", context)
         client = Atlas(_host,
                        port=_port,
                        username=_username,
@@ -85,7 +79,6 @@ class AtlasBackend(Backend):
         
         
         log.info("Creating dag and operator entities")
-        # client.entity_post.create(data={"entity": process.as_dict()})
         client.entity_bulk.create(data={"entities": dag_op_list})
         log.info("Done. Created lineage")
 

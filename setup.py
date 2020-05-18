@@ -23,9 +23,23 @@ with open("requirements.txt") as f:
         reqs.append(line.strip())
 
 setup_args = dict(
-    name='atlan_lite',
-    version='0.0.1',
-    description='Plugin to push airflow lineage to Atlan',
+    name='atlan',
+    version=__version__,
+    description='Plugin to push airflow lineage metadata to Atlan',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Plugins'
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.6',
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators'
+      ],
+    keywords='data lineage airflow data governance data democratization atlan atlas',
+    url='https://github.com/atlanhq/atlan-airflow-lineage-plugin',
+    author='Atlan',
+    author_email='support@atlan.com',
+    license='Apache License 2.0',
     packages=packages,
     include_package_data=True,
     install_requires=reqs
@@ -33,26 +47,3 @@ setup_args = dict(
 
 if __name__ == '__main__':
     setup(**setup_args)
-from setuptools import setup, find_packages
-
-setup(name='funniest',
-      version='0.1',
-      description='The funniest joke in the world',
-      long_description='Really, the funniest around.',
-      classifiers=[
-        'Development Status :: 3 - Alpha',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 2.7',
-        'Topic :: Text Processing :: Linguistic',
-      ],
-      keywords='funniest joke comedy flying circus',
-      url='http://github.com/storborg/funniest',
-      author='Flying Circus',
-      author_email='flyingcircus@example.com',
-      license='MIT',
-      packages=find_packages(),
-      install_requires=[
-          'markdown',
-      ],
-      include_package_data=True,
-      zip_safe=False)

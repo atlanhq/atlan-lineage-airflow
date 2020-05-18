@@ -18,6 +18,7 @@ log = LoggingMixin().log
 class Backend(AtlasBackend):
     @staticmethod
     def create_lineage_meta(operator, inlets, outlets, context):
+        # type: (object, list, list, dict) -> list, list, list
         _execution_date = convert_to_utc(context['ti'].execution_date)
         _start_date = convert_to_utc(context['ti'].start_date)
         _end_date = convert_to_utc(context['ti'].end_date)
