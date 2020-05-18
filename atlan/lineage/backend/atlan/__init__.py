@@ -5,7 +5,7 @@ import json
 from airflow.configuration import conf
 from airflow.utils.log.logging_mixin import LoggingMixin
 
-from atlan_lite.lineage.models.backend import Backend
+from atlan.lineage.models.backend import Backend
 
 log = LoggingMixin().log
 
@@ -16,6 +16,7 @@ _headers = {
   'token': _token,
   'Content-Type': 'application/json'
 }
+
 
 def create_bulk(data):
     # type: (List[dict]) -> Union[NoReturn, None]

@@ -36,8 +36,8 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Lint with flake8
       run: |
-        flake8 atlan_lite --count --statistics 
+        flake8 atlan --count --statistics 
     
     - name: Types check with mypy
       run: |
-        mypy -p atlan_lite
+        mypy -p atlan

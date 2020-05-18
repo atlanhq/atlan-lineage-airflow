@@ -17,7 +17,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.hooks.snowflake_hook import SnowflakeHook
 from airflow.contrib.operators.snowflake_operator import SnowflakeOperator
 
-from atlan_lite.models.assets import SnowflakeTable, File
+from atlan.models.assets import SnowflakeTable, File
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ The icons in green represent Airflow operators - one can see the inputs and outp
 
 `pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
 
-1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Just change `backend` to `atlan_lite.lineage.backend.atlan.AtlasBackend`
+1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Just change `backend` to `atlan.lineage.backend.Atlas`
 
 2. To send lineage to Atlan, make the following changes to airflow.cfg
 ```
@@ -100,7 +100,7 @@ token = 'my-secret-token'
 1. Package import 
 
 ```
-from atlan_lite.models.assets import SnowflakeTable
+from atlan.lineage.assets import SnowflakeTable
 ```
 
 2. Specify Snowflake table in inlet/outlet
