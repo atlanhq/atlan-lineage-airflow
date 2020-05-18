@@ -206,7 +206,7 @@ In the above dag, we have three tasks:
 
 This is what the DAG looks like on Airflow:
 
-![Airflow DAH](/images/airflow_dag_readme_example.png)
+![Airflow DAG](/images/airflow_dag_readme_example.png)
 
 This is what lineage from the dag above is represented in Atlas - you can clearly see which table was produced from which task, which task has which table as input, etc.
 
