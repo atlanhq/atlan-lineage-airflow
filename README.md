@@ -1,82 +1,71 @@
 ### Plugin to send airflow lineage data to Atlan
 
-
-Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for Snowflake operations.
+Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for operation on Snowflake entities.
 
 
 Let's take a look at an example dag and see what the result looks like on Atlas:
 
 ```python
-## DAG name: example_dag3
+## DAG name: customer_distribution_apac
 
 import logging
 
 import airflow
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.contrib.hooks.snowflake_hook import SnowflakeHook
 from airflow.contrib.operators.snowflake_operator import SnowflakeOperator
 
-from atlan.models.assets import SnowflakeTable, File
+from atlan.models.assets import SnowflakeTable
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+args = {"owner": "Atlan", "start_date": airflow.utils.dates.days_ago(2)}
 
-args = {"owner": "Airflow", "start_date": airflow.utils.dates.days_ago(2)}
-
-dag = DAG(
-    dag_id="example_dag3", default_args=args, schedule_interval=None
-)
-
-table_name = "sample_table"
-
-create_insert_query = [
-    """DROP TABLE IF EXISTS "public.{}";""".format(table_name), 
-    """create table public.{} (amount number);""".format(table_name),
-    """insert into public.{} values(1),(2),(3);""".format(table_name),
-]
-
-def row_count(**context):
-    dwh_hook = SnowflakeHook(snowflake_conn_id="snowflake_demo_db")
-    result = dwh_hook.get_first("select count(*) from public.{}".format(table_name))
-    logging.info("Number of rows in `public.%s`  - %s", table_name, result[0])
-
-f = File("/tmp/input/{{ execution_date }}")
+dag = DAG(dag_id="customer_distribution_apac", default_args=args, schedule_interval=None)
 
 with dag:
-    create = SnowflakeOperator(
-        task_id="create", 
-        sql=create_insert_query,
-        snowflake_conn_id="snowflake_demo_db",
-        outlets={"datasets": [SnowflakeTable(table_alias="cy25812.ap-southeast-1/demo_db/public/{}".format(table_name), name = table_name)]}
-    )
+    customer_nation_join = SnowflakeOperator(
+                                task_id="customer_nation_join", 
+                                sql="create table biw.private.customer_enriched as select c.c_custkey, c.c_acctbal, c.c_mktsegment, n.n_nationkey, n.n_name from biw.raw.customer c inner join biw.raw.nation n on c.c_nationkey = n.n_nationkey",
+                                snowflake_conn_id="snowflake_common",
+                                inlets: {"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/customer", name = "customer"),SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/nation", name = "nation")]},
+                                outlets: {"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/customer_enriched", name = "customer_enriched")]}
+                            )
 
-    get_count = PythonOperator(
-        task_id="get_count", 
-        python_callable=row_count,
-        inlets={"auto": True}, 
-        outlets={"datasets":[f]}
-    )
-    
+    filter_apac = SnowflakeOperator(
+                        task_id="filter_apac", 
+                        sql="create table biw.private.customer_apac as select * from biw.private.customer_enriched where n_name in ('CHINA', 'INDIA', 'INDONESIA', 'VIETNAM', 'PAKISTAN', 'NEW ZEALEAND', 'AUSTRALIA')",
+                        snowflake_conn_id="snowflake_common",
+                        inlets: {"auto":True},
+                        outlets: {"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/customer_apac", name = "customer_apac")]}
+                    )
 
-create >> get_count
+    aggregate_apac = SnowflakeOperator(
+                        task_id="aggregate_apac", 
+                        sql="create table biw.cubes.customer_distribution as select count(*) as num_customers, n_name as nation from biw.private.customer_apac group by n_name",
+                        snowflake_conn_id="snowflake_common",
+                        inlets: {"auto":True}
+                        outlets: {"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/cubes/customer_distribution", name = "customer_distribution")]}
+                    )
+
+customer_nation_join >> filter_apac >> aggregate_apac
 ```
 
 
+In the above dag, we have three tasks:
 
-In the above dag, we have two tasks:
-
-1. `create` : This task creates a table on Snowflake and populates it with some data. The output of this task is the Snowflake table `sample_table`, so this is what we configure for  the task `outlets` parameter. 
-2. `get_count`: This task gets the number of rows present in the table created in `create` task. The input of this task is the output of the upstream task, and lets assume the output is a file. 
-
-###### NOTE: This plugin supports Airflow convention for defining inlets and outlets
+1. `customer_nation_join` : This task joins two Snowflake tables `nation` and `customer` and creates the Snowflake table `customer_enriched`. The input of of this task are Snowflake tables `nation` and `customer`, and the output `customer_enriched` table, so this is what task inlets and outlets are configured as.
+2. `filter_apac`: This task filters out the customers in table `customer_enriched` that lies in APAC nations and creates the table `customer_apac`. The input of this task is the output of the upstream task and the output is `customer_apac` 
+3. `aggregate_apac`: This task counts the customers present in each APAC nation and creates table `customer_distribition`. The input of this table is the output of upstream task and output is table `customer_distribution`
 
 This is what lineage from the dag above is represented in Atlas:
 
 ![Lineage on Atlas](/images/atlas_lineage_readme_example.png)
 
+The icons in green represent Airflow task - one can see the inputs and outputs for each task.
 
-The icons in green represent Airflow operators - one can see the inputs and outputs for each operator. 
+This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/lineage.html) to create inlets and outlets. So inlets can be defined in the following ways:
+* by a list of dataset {"datasets": [dataset1, dataset2]}
+* can be configured to look for outlets from upstream tasks {"task_ids": ["task_id1", "task_id2"]}
+* can be configured to pick up outlets from direct upstream tasks {"auto": True}
+* a combination of them
 
 
 #### Installation:
@@ -85,11 +74,13 @@ The icons in green represent Airflow operators - one can see the inputs and outp
 
 1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Just change `backend` to `atlan.lineage.backend.Atlas`
 
-2. To send lineage to Atlan, make the following changes to airflow.cfg
+2. To send lineage to Atlan, change the `backend` value in airflow.cfg like so:
 ```
 [lineage]
-backend = atlan_lite.lineage.backend.atlan.AtlanBackend
-
+backend = atlan.lineage.backend.Atlan
+```
+Generate an access token on Atlan and add the following to airflow.cfg
+```
 [atlan]
 url = lite.atlan.com/api/v1/caspian
 token = 'my-secret-token' 
@@ -97,7 +88,7 @@ token = 'my-secret-token'
 
 #### Usage
 
-1. Package import 
+1. Package import: At the top of dag file, import the relevant entity
 
 ```
 from atlan.lineage.assets import SnowflakeTable
@@ -108,11 +99,9 @@ from atlan.lineage.assets import SnowflakeTable
 ```
 SnowflakeTable(table_alias = "snowflake-account-name/snowflake-database-name/snowflake-schema-name/snowflake-table-name",
                 name = "snowflake-table-name")
-
 ```
 
-*Sample dags can be found in the folder* ***sample_dags***
-
+##### _Sample dags can be found in **examples** folder_
 
 #### Prerequisites
 You need to have the following setup before you can start using this:
