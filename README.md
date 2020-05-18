@@ -92,6 +92,14 @@ Lets call this `lineage object`
 ```
 Only keys `datasets`, `task_ids`, `auto` are accepted. If the key is `auto`, then value should be `True` and not a list
 
+This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/lineage.html) to create inlets and outlets. So inlets can be defined in the following ways:
+* by a list of dataset {"datasets": [dataset1, dataset2]}
+* can be configured to look for outlets from upstream tasks {"task_ids": ["task_id1", "task_id2"]}
+* can be configured to pick up outlets from direct upstream tasks {"auto": True}
+* a combination of them
+
+
+
 #### YAML DAG
 
 ```YAML
@@ -269,14 +277,6 @@ customer_distribution_apac:
 ```
 
 ##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters. You can find the patched at [https://github.com/atlanhq/dag-factory](https://github.com/atlanhq/dag-factory)
-
-
-This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/lineage.html) to create inlets and outlets. So inlets can be defined in the following ways:
-* by a list of dataset {"datasets": [dataset1, dataset2]}
-* can be configured to look for outlets from upstream tasks {"task_ids": ["task_id1", "task_id2"]}
-* can be configured to pick up outlets from direct upstream tasks {"auto": True}
-* a combination of them
-
 
 ##### _Sample dags can be found in **examples** folder_
 
