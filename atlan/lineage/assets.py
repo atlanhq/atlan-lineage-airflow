@@ -1,12 +1,30 @@
+# Copyright 2020 Peeply Technologies Private Limited
+#
+# Licensed under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy
+# of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
 import six
 
 from typing import List, Tuple, Union
 from jinja2 import Environment
 
-from airflow.lineage.datasets import *
+from airflow.lineage.datasets import *  # noqa: F401, F403
 from airflow.lineage.datasets import DataSet
 
 import hashlib
+
 
 class Entity(object):
     attributes = []  # type: List[str]
@@ -21,20 +39,22 @@ class Entity(object):
         if "name" in kwargs:
             self._name = kwargs['name']
 
-        self._data.update(dict((key, value) for key, value in six.iteritems(kwargs)
+        self._data.update(dict((key, value) for key, value in six.iteritems(
+                                                                        kwargs)
                                if key in set(self.attributes)))
 
         if data:
             if "qualifiedName" in data:
                 self._qualified_name = data.pop("qualifiedName")
-            
+
             if "name" in data:
                 self._name = data["name"]
-            
+
             if "guid" in data:
                 self._guid = data.pop("guid")
 
-            self._data = dict((key, value) for key, value in six.iteritems(data)
+            self._data = dict((key, value) for key, value in six.iteritems(
+                                                                        data)
                               if key in set(self.attributes))
 
     def set_context(self, context):
@@ -59,11 +79,11 @@ class Entity(object):
     def guid(self):
         # type: () -> Union[str, None]
         if self.name:
-            self._guid = str(int(hashlib.md5(self.name.encode()).hexdigest(), 16) * -1)[:10]
+            self._guid = str(int(hashlib.md5(self.name.encode()).hexdigest(),
+                                 16) * -1)[:10]
         else:
             self._guid = None
         return self._guid
-            
 
     def as_dict(self):
         # type: () -> dict
@@ -82,7 +102,6 @@ class Entity(object):
         }
         return d
 
-
     def as_reference(self):
         # type: () -> dict
         d = {
@@ -92,9 +111,11 @@ class Entity(object):
 
         return d
 
+
 class Cluster(Entity):
-    attributes = ["name"] # type: List[str]
+    attributes = ["name"]  # type: List[str]
     type_name = "cluster"
+
     def __init__(self, name=None, data=None):
         super(Entity, self).__init__(name=name, data=data)
 
@@ -102,6 +123,7 @@ class Cluster(Entity):
 class DataBase(Entity):
     type_name = "database"
     attributes = ["name"]
+
     def __init__(self, name=None, data=None):
         super(Entity, self).__init__(name=name, data=data)
 
@@ -109,6 +131,7 @@ class DataBase(Entity):
 class Schema(Entity):
     type_name = "schema"
     attributes = ["name"]
+
     def __init__(self, name=None, data=None):
         super(Entity, self).__init__(name=name, data=data)
 
@@ -116,8 +139,10 @@ class Schema(Entity):
 class Table(DataSet):
     type_name = "table"
     attributes = ["name"]
+
     def __init__(self, name=None, data=None):
         super(DataSet, self).__init__(name=name, data=data)
+
 
 class SnowflakeAccount(Cluster):
     type_name = "snowflake_cluster"
@@ -126,6 +151,7 @@ class SnowflakeAccount(Cluster):
     def __init__(self, name, data=None):
         super(Cluster, self).__init__(name=name, data=data)
         self._qualified_name = 'cluster://' + self.name
+
 
 class SnowflakeDatabase(DataBase):
     type_name = "snowflake_database"
@@ -136,10 +162,11 @@ class SnowflakeDatabase(DataBase):
         self._qualified_name = parent.name + '://' + self.name
         self._data['cluster'] = parent.as_reference()
 
+
 class SnowflakeSchema(Schema):
     type_name = "snowflake_schema"
     attributes = ["name"]
-    
+
     def __init__(self, name, parent, data=None):
         super(Schema, self).__init__(name=name, data=data)
         self._qualified_name = parent.qualified_name + '.' + self.name
@@ -150,7 +177,8 @@ class SnowflakeTable(Table):
     type_name = "snowflake_table"
     attributes = ["name"]
 
-    def __init__(self, name=None, table_alias = None, connection_id = None, data=None):
+    def __init__(self, name=None, table_alias=None, connection_id=None,
+                 data=None):
         super(Table, self).__init__(name=name, data=data)
         if name:
             parent = self.create_parent_entities(table_alias, connection_id)
@@ -169,19 +197,19 @@ class SnowflakeTable(Table):
         if table_alias:
             account, db, schema = self.parse_alias(table_alias)
         self.account = SnowflakeAccount(account)
-        print("account:", self.account.as_dict())        
+        print("account:", self.account.as_dict())
         self.db = SnowflakeDatabase(db, self.account)
         print("db:", self.db.as_dict())
         self.schema = SnowflakeSchema(schema, self.db)
         print("schema:", self.schema.as_dict())
         return self.schema
 
-    ## TODO: change function name
+    # TODO: change function name
     def as_nested_dict(self):
         # type: () -> List[dict]
         d = self.as_dict()
 
-        entities = [] # type: List[dict]
+        entities = []  # type: List[dict]
         entities.append(self.account.as_dict())
         entities.append(self.db.as_dict())
         entities.append(self.schema.as_dict())
@@ -198,8 +226,9 @@ class SnowflakeTable(Table):
         if self.context:
             for key, value in six.iteritems(attributes):
                 try:
-                    attributes[key] = env.from_string(value).render(**self.context)
-                except Exception as e:
+                    attributes[key] = env.from_string(value).render(
+                                                           **self.context)
+                except Exception as e:  # noqa: F841
                     pass
 
         d = {
@@ -208,14 +237,16 @@ class SnowflakeTable(Table):
         }
         return d
 
+
 class Dag(Entity):
-    type_name = "airflow_dag"    
-    attributes = ["name", "dag_id", "execution_date", "run_id"] 
-        
+    type_name = "airflow_dag"
+    attributes = ["name", "dag_id", "execution_date", "run_id"]
+
 
 class Operator(DataSet):
     type_name = "airflow_operator"
 
     # todo we can derive this from the spec
-    attributes = ["dag_id", "task_id", "command", "conn_id", "name", "execution_date",
-                  "start_date", "end_date", "inputs", "outputs", "airflow_dag"]
+    attributes = ["dag_id", "task_id", "command", "conn_id", "name",
+                  "execution_date", "start_date", "end_date", "inputs",
+                  "outputs", "airflow_dag"]

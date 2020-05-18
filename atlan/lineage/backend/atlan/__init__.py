@@ -1,3 +1,19 @@
+# Copyright 2020 Peeply Technologies Private Limited
+#
+# Licensed under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy
+# of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 from typing import List, Any, Union, NoReturn
 import requests
 import json
@@ -23,29 +39,33 @@ def create_bulk(data):
     try:
         url = "https://{url}/entities/bulk".format(url=_url)
         payload = json.dumps(data)
-        response = requests.request("POST", url, headers=_headers, data=payload)
+        response = requests.request("POST", url, headers=_headers,
+                                    data=payload)
         if not response.status_code == 200:
-            message = "API call failed with response code {}. Error message: {}".format(response.status_code, response.text)
+            message = "API call failed with response code {}. Error message: \
+                                {}".format(response.status_code, response.text)
             raise Exception(message)
         else:
             return None
     except Exception as e:
         raise Exception(e)
+
 
 def create(data):
     # type: (dict) -> Union[NoReturn, None]
     try:
         url = "https://{url}/entities".format(url=_url)
         payload = json.dumps(data)
-        response = requests.request("POST", url, headers=_headers, data=payload)
+        response = requests.request("POST", url, headers=_headers,
+                                    data=payload)
         if not response.status_code == 200:
-            message = "API call failed with response code {}. Error message: {}".format(response.status_code, response.text)
+            message = "API call failed with response code {}. Error message: \
+                                {}".format(response.status_code, response.text)
             raise Exception(message)
         else:
             return None
     except Exception as e:
         raise Exception(e)
-
 
 
 class AtlanBackend(Backend):
@@ -53,7 +73,11 @@ class AtlanBackend(Backend):
     def send_lineage(operator, inlets, outlets, context):
         # type: (Any, list, list, dict) -> None
 
-        inlet_list, outlet_list, dag_op_list = Backend.create_lineage_meta(operator, inlets, outlets, context)
+        inlet_list, outlet_list, dag_op_list = Backend.create_lineage_meta(
+                                                                    operator,
+                                                                    inlets,
+                                                                    outlets,
+                                                                    context)
 
         if inlets:
             for entity_dict in inlet_list:
@@ -77,8 +101,8 @@ class AtlanBackend(Backend):
                 if not entity_dict:
                     continue
 
-                log.info("Outlets: {}".format(entity_dict)) 
-                log.info("Creating output entities")    
+                log.info("Outlets: {}".format(entity_dict))
+                log.info("Creating output entities")
                 try:
                     if isinstance(entity_dict, dict):
                         log.info("Calling the single entity create API")
@@ -89,7 +113,6 @@ class AtlanBackend(Backend):
                 except Exception as e:
                     log.info("Failed to create outlets. Error: {}".format(e))
 
-        
         log.info("Creating dag and operator entities")
         create_bulk(data=dag_op_list)
         log.info("Done. Created lineage")
