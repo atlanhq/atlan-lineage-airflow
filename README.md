@@ -139,6 +139,9 @@ customer_distribution_apac:
 
 ```
 
+##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters. You can find the path at [](https://github.com/atlanhq/dag-factory)
+
+##### _Sample dags can be found in **examples** folder_
 
 This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/lineage.html) to create inlets and outlets. So inlets can be defined in the following ways:
 * by a list of dataset {"datasets": [dataset1, dataset2]}
@@ -151,6 +154,8 @@ This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/li
 
 `pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
 
+
+#### Enable plugin
 1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Just change `backend` to `atlan.lineage.backend.Atlas`
 
 2. To send lineage to Atlan, change the `backend` value in airflow.cfg like so:
@@ -180,7 +185,6 @@ SnowflakeTable(table_alias = "snowflake-account-name/snowflake-database-name/sno
                 name = "snowflake-table-name")
 ```
 
-##### _Sample dags can be found in **examples** folder_
 
 #### Prerequisites
 You need to have the following setup before you can start using this:
