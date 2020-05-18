@@ -1,19 +1,19 @@
-### Plugin to send airflow lineage data to Atlan
+## Send Airflow lineage to Atlan
+#### This plugin allows you to send lineage metadata from Airflow to Atlan
 
-Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for operation on Snowflake entities.
+Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for operation on Snowflake entities. This lineage can then be viewed on Atlas or [Atlan](https://atlan.com)
 
 
-#### Prerequisites
+### Prerequisites
 You need to have the following setup before you can start using this:
 1. [Apache Airflow](https://airflow.apache.org/docs/stable/start.html)
 2. [Apache Atlas](http://atlas.apache.org)
 3. [Snowflake](https://www.snowflake.com)
 
 
-#### Installation:
+### Installation
 
 `pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
-
 
 #### Enable plugin
 1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Just change `backend` to `atlan.lineage.backend.Atlas`
@@ -30,9 +30,9 @@ url = lite.atlan.com/api/v1/caspian
 token = 'my-secret-token' 
 ```
 
-#### Usage
+### Tutorial
 
-1. Package import: At the top of dag file, import the modules for entity you want create lineage for
+1. At the top of dag file, import the modules for entity you want create lineage for
 
 ```
 from atlan.lineage.assets import SnowflakeTable
@@ -67,13 +67,14 @@ sample_task = SnowflakeOperator(
 
 ```
 
-Instantiating a SnowflakeTable object: This takes 2 arguments - `table_alias` and `name`
+#### Instantiating a SnowflakeTable
+SnowflakeTable takes 2 arguments - `table_alias` and `name`:
 1. `table_alias`: This is a string representing the location of a Snowflake table ie the account, database, schema a table is present in. It follows format `snowflake-account/snowflake-database/snowflake-schema/snowflake-table`, where `snowflake-account` is the name of your snowflake account, etc
 2. `name`: This is the name of the table in question
 
 Lets call this `lineage object`
 
-Anatomy of Inlets and Outlets
+#### Anatomy of Airflow Inlets and Outlets
 `Inlets` and `Outlets` are parameters of Airflow operators that allow us to specify task input and output. They follow the following format:
 ```python
 {
@@ -89,7 +90,7 @@ Anatomy of Inlets and Outlets
 ```
 Only keys `datasets`, `task_ids`, `auto` are accepted. If the key is `auto`, then value should be `True` and not a list
 
-For YAML DAG configs -
+#### YAML DAG
 
 ```YAML
 ## task definition
@@ -108,7 +109,7 @@ The inlets and outlets are defined same as above, just the dictionary is enclose
 
 
 
-#### Example DAG
+### Example DAG
 
 Let's take a look at an example dag and see what the result looks like on Atlas:
 
@@ -229,6 +230,8 @@ This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/li
 * a combination of them
 
 
+
+#### Sample YAML DAG
 
 If you are using YAML configs to create Airflow DAGs, this is what the above dag would look like
 
