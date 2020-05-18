@@ -93,11 +93,17 @@ In the above dag, we have three tasks:
 2. `filter_apac`: This task filters out the customers in table `customer_enriched` that lies in APAC nations and creates the table `customer_apac`. The input of this task is the output of the upstream task and the output is `customer_apac` 
 3. `aggregate_apac`: This task counts the customers present in each APAC nation and creates table `customer_distribition`. The input of this table is the output of upstream task and output is table `customer_distribution`
 
+
+This is what the DAG looks like on Airflow:
+
+![Airflow DAH](/images/airflow_dag_readme_example.png)
+
 This is what lineage from the dag above is represented in Atlas:
 
 ![Lineage on Atlas](/images/atlas_lineage_readme_example.png)
 
-The icons in green represent Airflow task - one can see the inputs and outputs for each task.
+The icons in green represent Airflow task - one can see the inputs and outputs for each task. 
+The yellow arrows represent lineage of an entity and the red arrows represent impact of the entity. 
 
 If you are using YAML configs to create Airflow DAGs, this is what the above dag would look like
 
