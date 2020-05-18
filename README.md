@@ -98,12 +98,19 @@ This is what the DAG looks like on Airflow:
 
 ![Airflow DAH](/images/airflow_dag_readme_example.png)
 
-This is what lineage from the dag above is represented in Atlas:
+This is what lineage from the dag above is represented in Atlas - you can clearly see which table was produced from which task, which task has which table as input, etc.
 
 ![Lineage on Atlas](/images/atlas_lineage_readme_example.png)
 
 The icons in green represent Airflow task - one can see the inputs and outputs for each task. 
 The yellow arrows represent lineage of an entity and the red arrows represent impact of the entity. 
+
+This is what the Airflow DAG entity looks on Atlas. You can see the tasks present in the dag, along with other meta.
+![DAG Entity on Atlas](/images/atlas_dag_entity_readme_example.png)
+
+This is what the Airflow Operator entity looks on Atlas. You can see the DAG that the operator is part of, the inputs and outputs for the operator.
+![DAG Entity on Atlas](/images/atlas_op_entity_readme_example.png)
+
 
 If you are using YAML configs to create Airflow DAGs, this is what the above dag would look like
 
@@ -111,7 +118,7 @@ If you are using YAML configs to create Airflow DAGs, this is what the above dag
 customer_distribution_apac:
   default_args:
     owner: 'Atlan'
-    start_date: 2020-01-01  # or '2 days'
+    start_date: 2020-01-01 
     retries: 1
     retry_delay_sec: 30
   description: Create an aggregated table to see distribution of customers across APAC nations
@@ -119,8 +126,8 @@ customer_distribution_apac:
   concurrency: 1
   max_active_runs: 1
   dagrun_timeout_sec: 60
-  default_view: 'tree'  # or 'graph', 'duration', 'gantt', 'landing_times'
-  orientation: 'LR'  # or 'TB', 'RL', 'BT'
+  default_view: 'tree' 
+  orientation: 'LR'
   tasks:
     customer_nation_join:
       operator: airflow.contrib.operators.snowflake_operator.SnowflakeOperator
