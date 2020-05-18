@@ -13,7 +13,7 @@ You need to have the following setup before you can start using this:
 
 ### Installation
 
-`pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
+`pip install atlan-airflow-lineage-plugin`
 
 #### Enable plugin
 1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Just change `backend` to `atlan.lineage.backend.Atlas`
