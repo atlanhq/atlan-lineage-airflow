@@ -14,7 +14,7 @@ import airflow
 from airflow import DAG
 from airflow.contrib.operators.snowflake_operator import SnowflakeOperator
 
-from atlan.models.assets import SnowflakeTable
+from atlan.lineage.assets import SnowflakeTable
 
 args = {"owner": "Atlan", "start_date": airflow.utils.dates.days_ago(2)}
 
@@ -23,39 +23,66 @@ dag = DAG(dag_id="customer_distribution_apac", default_args=args, schedule_inter
 with dag:
   customer_nation_join = SnowflakeOperator(
     task_id = "customer_nation_join",
-    sql = "create table biw.private.customer_enriched as select c.c_custkey, c.c_acctbal, c.c_mktsegment, n.n_nationkey, n.n_name from biw.raw.customer c inner join biw.raw.nation n on c.c_nationkey = n.n_nationkey",
+    sql = """CREATE TABLE biw.private.customer_enriched AS
+             SELECT c.c_custkey,
+                c.c_acctbal,
+                c.c_mktsegment,
+                n.n_nationkey,
+                n.n_name
+             FROM biw.raw.customer c
+             INNER JOIN biw.raw.nation n ON c.c_nationkey = n.n_nationkey""",
     snowflake_conn_id = "snowflake_common",
     inlets: {
-      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/raw/customer", name = "customer"), SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/raw/nation", name = "nation")]
+      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/raw/customer", 
+                                  name = "customer"), 
+                   SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/raw/nation", 
+                                  name = "nation")]
     },
     outlets: {
-      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/private/customer_enriched", name = "customer_enriched")]
+      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/private/customer_enriched", 
+                                  name = "customer_enriched")]
     }
   )
 
 filter_apac = SnowflakeOperator(
   task_id = "filter_apac",
-  sql = "create table biw.private.customer_apac as select * from biw.private.customer_enriched where n_name in ('CHINA', 'INDIA', 'INDONESIA', 'VIETNAM', 'PAKISTAN', 'NEW ZEALEAND', 'AUSTRALIA')",
+  sql = """CREATE TABLE biw.private.customer_apac AS
+           SELECT *
+           FROM biw.private.customer_enriched
+           WHERE n_name IN ('CHINA',
+                           'INDIA',
+                           'INDONESIA',
+                           'VIETNAM',
+                           'PAKISTAN',
+                           'NEW ZEALEAND',
+                           'AUSTRALIA')""",
   snowflake_conn_id = "snowflake_common",
   inlets: {
     "auto": True
   },
   outlets: {
-    "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/private/customer_apac", name = "customer_apac")]
+    "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/private/customer_apac", 
+                                name = "customer_apac")]
   }
 )
 
 aggregate_apac = SnowflakeOperator(
   task_id = "aggregate_apac",
-  sql = "create table biw.cubes.customer_distribution as select count(*) as num_customers, n_name as nation from biw.private.customer_apac group by n_name",
+  sql = """CREATE TABLE biw.cubes.customer_distribution AS
+           SELECT count(*) AS num_customers,
+               n_name AS nation
+           FROM biw.private.customer_apac
+           GROUP BY n_name""",
   snowflake_conn_id = "snowflake_common",
   inlets: {
     "auto": True
   }
   outlets: {
-    "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/cubes/customer_distribution", name = "customer_distribution")]
+    "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/cubes/customer_distribution", 
+                                name = "customer_distribution")]
   }
 )
+
 customer_nation_join >> filter_apac >> aggregate_apac
 ```
 
@@ -71,6 +98,47 @@ This is what lineage from the dag above is represented in Atlas:
 ![Lineage on Atlas](/images/atlas_lineage_readme_example.png)
 
 The icons in green represent Airflow task - one can see the inputs and outputs for each task.
+
+If you are using YAML configs to create Airflow DAGs, this is what the above dag would look like
+
+```YAML
+customer_distribution_apac:
+  default_args:
+    owner: 'Atlan'
+    start_date: 2020-01-01  # or '2 days'
+    retries: 1
+    retry_delay_sec: 30
+  description: Create an aggregated table to see distribution of customers across APAC nations
+  schedule_interval: '0 0 * 12 0'
+  concurrency: 1
+  max_active_runs: 1
+  dagrun_timeout_sec: 60
+  default_view: 'tree'  # or 'graph', 'duration', 'gantt', 'landing_times'
+  orientation: 'LR'  # or 'TB', 'RL', 'BT'
+  tasks:
+    customer_nation_join:
+      operator: airflow.contrib.operators.snowflake_operator.SnowflakeOperator
+      sql: create table biw.private.customer_enriched as select c.c_custkey, c.c_acctbal, c.c_mktsegment, n.n_nationkey, n.n_name from biw.raw.customer c inner join biw.raw.nation n on c.c_nationkey = n.n_nationkey
+      snowflake_conn_id: "snowflake_common"
+      inlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/customer", name = "customer"),SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/nation", name = "nation")]}'
+      outlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/customer_enriched", name = "customer_enriched")]}'
+    filter_apac:
+      operator: airflow.contrib.operators.snowflake_operator.SnowflakeOperator
+      sql: create table biw.private.customer_apac as select * from biw.private.customer_enriched where n_name in ('CHINA', 'INDIA', 'INDONESIA', 'VIETNAM', 'PAKISTAN', 'NEW ZEALEAND', 'AUSTRALIA')
+      snowflake_conn_id: "snowflake_common"
+      inlets: '{"auto":True}'
+      outlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/customer_apac", name = "customer_apac")]}'
+      dependencies: [customer_nation_join]
+    aggregate_apac:
+      operator: airflow.contrib.operators.snowflake_operator.SnowflakeOperator
+      sql: create table biw.cubes.customer_distribution as select count(*) as num_customers, n_name as nation from biw.private.customer_apac group by n_name
+      snowflake_conn_id: "snowflake_common"
+      inlets: '{"auto":True}'
+      outlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/cubes/customer_distribution", name = "customer_distribution")]}'
+      dependencies: [filter_apac]
+
+```
+
 
 This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/lineage.html) to create inlets and outlets. So inlets can be defined in the following ways:
 * by a list of dataset {"datasets": [dataset1, dataset2]}
