@@ -1,4 +1,5 @@
-## Atlan Airflow Lineage Plugin
+## atlan-lineage-airflow
+
 #### This plugin allows you to send lineage metadata from Airflow to Atlan
 
 Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for operation on Snowflake entities. This lineage can then be viewed on Atlas or [Atlan](https://atlan.com)
@@ -14,9 +15,7 @@ You need to have the following setup before you can start using this:
 ### Installation
 
 ```
-git clone https://github.com/atlanhq/atlan-lineage-airflow
-$ cd atlan-lineage-airflow
-$ pip install .
+pip install git+https://github.com/atlanhq/atlan-lineage-airflow
 ```
 
 #### Enable plugin
