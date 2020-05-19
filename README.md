@@ -13,7 +13,7 @@ You need to have the following setup before you can start using this:
 
 ### Installation
 
-`pip3 install --ignore-installed git+ssh://git@github.com/atlanhq/atlan-airflow-lineage-plugin`
+`pip install atlan-airflow-lineage-plugin`
 
 #### Enable plugin
 1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Just change `backend` to `atlan.lineage.backend.Atlas`
@@ -45,7 +45,9 @@ from atlan.lineage.assets import SnowflakeTable
 # Creates Snowflake table `my_new_table` from Snowflake table `my_table`
 # Inlet for task - Snowflake table 'my_table'
 # Outlet for task - file 'my_new_table'
-# Assuming snowflake account name 
+# Let snowflake account name: mi04151.ap-south-1
+# Let snowflake database name: biw 
+# Let snowflake schema names: raw, private
 
 sample_task = SnowflakeOperator(
     task_id = "sample_task",
@@ -55,13 +57,13 @@ sample_task = SnowflakeOperator(
     snowflake_conn_id = "snowflake_common",                        ## snowflake connection id as configured in Airflow connections                                  
     
     inlets: {                                                      ## define inlets
-      "datasets": [SnowflakeTable(table_alias = "snowflake_account/snowflake_database/snowflake_schema/snowflake_table",    
-                                  name = "snowflake_table")]    
+      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/raw/my_table",    
+                                  name = "my_table")]    
     },
     
     outlets: {                                                     ## define outlets
-      "datasets": [SnowflakeTable(table_alias = "snowflake_account/snowflake_database/snowflake_schema/snowflake_table",    
-                                  name = "snowflake_table")]
+      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/private/my_new_table",    
+                                  name = "my_new_table")]
     }
   )
 
@@ -90,6 +92,14 @@ Lets call this `lineage object`
 ```
 Only keys `datasets`, `task_ids`, `auto` are accepted. If the key is `auto`, then value should be `True` and not a list
 
+This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/lineage.html) to create inlets and outlets. So inlets can be defined in the following ways:
+* by a list of dataset {"datasets": [dataset1, dataset2]}
+* can be configured to look for outlets from upstream tasks {"task_ids": ["task_id1", "task_id2"]}
+* can be configured to pick up outlets from direct upstream tasks {"auto": True}
+* a combination of them
+
+
+
 #### YAML DAG
 
 ```YAML
@@ -98,8 +108,8 @@ customer_nation_join:
     operator: airflow.contrib.operators.snowflake_operator.SnowflakeOperator
     sql: create table biw.private.customer_enriched as select c.c_custkey, c.c_acctbal, c.c_mktsegment, n.n_nationkey, n.n_name from biw.raw.customer c inner join biw.raw.nation n on c.c_nationkey = n.n_nationkey
     snowflake_conn_id: "snowflake_common"
-    inlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/customer", name = "customer"),SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/nation", name = "nation")]}'
-    outlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/customer_enriched", name = "customer_enriched")]}'
+    inlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/my_table", name = "my_table")]}'
+    outlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/my_new_table", name = "my_new_table")]}'
 
 ```
 The inlets and outlets are defined same as above, just the dictionary is enclosed in quotes.
@@ -221,16 +231,6 @@ This is what the Airflow DAG entity looks on Atlas. You can see the tasks presen
 This is what the Airflow Operator entity looks on Atlas. You can see the DAG that the operator is part of, the inputs and outputs for the operator.
 ![DAG Entity on Atlas](/images/atlas_op_entity_readme_example.png)
 
-##### _Sample dags can be found in **examples** folder_
-
-This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/lineage.html) to create inlets and outlets. So inlets can be defined in the following ways:
-* by a list of dataset {"datasets": [dataset1, dataset2]}
-* can be configured to look for outlets from upstream tasks {"task_ids": ["task_id1", "task_id2"]}
-* can be configured to pick up outlets from direct upstream tasks {"auto": True}
-* a combination of them
-
-
-
 #### Sample YAML DAG
 
 If you are using YAML configs to create Airflow DAGs, this is what the above dag would look like
@@ -277,5 +277,8 @@ customer_distribution_apac:
 ```
 
 ##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters. You can find the patched at [https://github.com/atlanhq/dag-factory](https://github.com/atlanhq/dag-factory)
+
+##### _Sample dags can be found in **examples** folder_
+
 
 
