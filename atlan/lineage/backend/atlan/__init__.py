@@ -28,7 +28,7 @@ log = LoggingMixin().log
 try:
     _url = conf.get("atlan", "url")
     _token = conf.get("atlan", "token")
-except:
+except Exception:
     _url = ""
     _token = ""
 
