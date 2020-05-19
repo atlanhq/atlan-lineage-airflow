@@ -25,8 +25,12 @@ from atlan.lineage.models.backend import Backend
 
 log = LoggingMixin().log
 
-_url = conf.get("atlan", "url")
-_token = conf.get("atlan", "token")
+try:
+    _url = conf.get("atlan", "url")
+    _token = conf.get("atlan", "token")
+except:
+    _url = ""
+    _token = ""
 
 _headers = {
   'token': _token,
