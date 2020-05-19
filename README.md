@@ -26,7 +26,7 @@ backend = atlan.lineage.backend.Atlan
 Generate an access token on Atlan and add the following to airflow.cfg
 ```
 [atlan]
-url = lite.atlan.com/api/v1/caspian
+url = my.atlan.com
 token = 'my-secret-token' 
 ```
 
