@@ -183,7 +183,7 @@ filter_apac = SnowflakeOperator(
                            'INDONESIA',
                            'VIETNAM',
                            'PAKISTAN',
-                           'NEW ZEALEAND',
+                           'NEW ZEALAND',
                            'AUSTRALIA')""",
   snowflake_conn_id = "snowflake_common",
   inlets: {
@@ -273,7 +273,7 @@ customer_distribution_apac:
     ## task definition
     filter_apac:
       operator: airflow.contrib.operators.snowflake_operator.SnowflakeOperator
-      sql: create table biw.private.customer_apac as select * from biw.private.customer_enriched where n_name in ('CHINA', 'INDIA', 'INDONESIA', 'VIETNAM', 'PAKISTAN', 'NEW ZEALEAND', 'AUSTRALIA')
+      sql: create table biw.private.customer_apac as select * from biw.private.customer_enriched where n_name in ('CHINA', 'INDIA', 'INDONESIA', 'VIETNAM', 'PAKISTAN', 'NEW ZEALAND', 'AUSTRALIA')
       snowflake_conn_id: "snowflake_common"
       inlets: '{"auto":True}'
       outlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/customer_apac", name = "customer_apac")]}'
