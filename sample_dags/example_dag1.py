@@ -6,7 +6,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.hooks.snowflake_hook import SnowflakeHook
 from airflow.contrib.operators.snowflake_operator import SnowflakeOperator
 
-from atlan_lite.models.assets import SnowflakeTable, File
+from atlan.lineage.assets import SnowflakeTable, File
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
