@@ -37,7 +37,7 @@ _headers = {
 def create_bulk(data):
     # type: (List[dict]) -> Union[NoReturn, None]
     try:
-        url = "https://{url}/entities/bulk".format(url=_url)
+        url = "https://{url}/api/v1/metadata/entities/bulk".format(url=_url)
         payload = json.dumps(data)
         response = requests.request("POST", url, headers=_headers,
                                     data=payload)
@@ -54,7 +54,7 @@ def create_bulk(data):
 def create(data):
     # type: (dict) -> Union[NoReturn, None]
     try:
-        url = "https://{url}/entities".format(url=_url)
+        url = "https://{url}/api/v1/metadata/entities".format(url=_url)
         payload = json.dumps(data)
         response = requests.request("POST", url, headers=_headers,
                                     data=payload)
