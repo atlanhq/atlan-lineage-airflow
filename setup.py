@@ -37,7 +37,7 @@ with open("requirements.txt") as f:
         reqs.append(line.strip())
 
 setup_args = dict(
-    name='atlan-ariflow-lineage-plugin',
+    name='atlan-lineage-airflow',
     version=__version__,
     description='Plugin to push airflow lineage metadata to Atlan',
     classifiers=[
