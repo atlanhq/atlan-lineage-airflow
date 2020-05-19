@@ -197,11 +197,8 @@ class SnowflakeTable(Table):
         if table_alias:
             account, db, schema = self.parse_alias(table_alias)
         self.account = SnowflakeAccount(account)
-        print("account:", self.account.as_dict())
         self.db = SnowflakeDatabase(db, self.account)
-        print("db:", self.db.as_dict())
         self.schema = SnowflakeSchema(schema, self.db)
-        print("schema:", self.schema.as_dict())
         return self.schema
 
     # TODO: change function name

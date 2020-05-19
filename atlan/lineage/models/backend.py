@@ -52,19 +52,6 @@ class Backend(AtlasBackend):
                 except Exception as e:  # noqa: F841
                     entity_dict = entity.as_dict()
 
-                # log.info("Inlets: {}".format(entity_dict))
-                # log.info("Creating input entities")
-                # try:
-                #     if isinstance(entity_dict, dict):
-                #         log.info("Calling the single entity create API")
-                #         create(data=entity_dict)
-                #     elif isinstance(entity_dict, list):
-                #         log.info("Calling the bulk entity create API")
-                #         create_bulk(data=entity_dict)
-                # except Exception as e:
-                #     log.info("Error creating inlet entity. \
-                # Error: {}".format(e))
-
                 inlet_list.append(entity_dict)
                 inlet_ref_list.append({"typeName": entity.type_name,
                                        "uniqueAttributes": {
@@ -88,17 +75,6 @@ class Backend(AtlasBackend):
                     entity_dict = entity.as_dict()
 
                 log.info("Outlets: {}".format(entity_dict))
-                # log.info("Creating output entities")
-                # try:
-                #     if isinstance(entity_dict, dict):
-                #         log.info("Calling the single entity create API")
-                #         create(data=entity_dict)
-                #     elif isinstance(entity_dict, list):
-                #         log.info("Calling the bulk entity create API")
-                #         create_bulk(data=entity_dict)
-                # except Exception as e:
-                #     log.info("Error creating outlet entity. \
-                #   Error: {}".format(e))
 
                 outlet_list.append(entity_dict)
                 outlet_ref_list.append({"typeName": entity.type_name,
@@ -152,9 +128,6 @@ class Backend(AtlasBackend):
         process = Operator(qualified_name=qualified_name, data=data)
         log.info("Process: {}".format(process.as_dict()))
 
-        # log.info("Creating process entity")
-        # create(data=process.as_dict())
-        # log.info("Done. Created lineage")
         dag_op_list.append(process.as_dict())
 
         return inlet_list, outlet_list, dag_op_list
