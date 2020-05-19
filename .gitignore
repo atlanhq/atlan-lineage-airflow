@@ -1,4 +1,4 @@
-atlan_lite/__pycache__/
-atlan_lite/lineage/__pycache__/
-atlan_lite/lineage/backend/__pycache__/
-atlan_lite/lineage/backend/atlan/__pycache__/
+atlan/__pycache__/
+atlan/lineage/__pycache__/
+atlan/lineage/backend/__pycache__/
+atlan/lineage/backend/atlan/__pycache__/

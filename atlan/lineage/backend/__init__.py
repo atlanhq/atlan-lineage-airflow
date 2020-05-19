@@ -14,33 +14,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: CI
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.6
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Lint with flake8
-      run: |
-        flake8 atlan --count --statistics     
-    - name: Types check with mypy
-      run: |
-        mypy -p atlan
+from atlan.lineage.backend.atlan import AtlanBackend as Atlan  # noqa: F401
+from atlan.lineage.backend.atlas import AtlasBackend as Atlas  # noqa: F401

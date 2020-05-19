@@ -1,3 +1,23 @@
+# License: MIT
+# Upstream url: http://bitbucket.org/tarek/flake8
+flake8==3.7.9
+
+# A flake8 plugin that helps you write tidier imports.
+# License: ISCL
+# Upstream url: https://pypi.python.org/pypi/flake8-tidy-imports
+flake8-tidy-imports==4.1.0
+
+# PEP 484
+# License: PSF
+# Upstream url: https://github.com/python/typing
+typing==3.7.4.1
+
+
+mypy==0.770
+
+typing-extensions==3.7.4.2
+
 atlasclient==1.0.0
 snowflake-connector-python==2.2.4
 snowflake-sqlalchemy==1.2.3
+flake8==3.7.9
