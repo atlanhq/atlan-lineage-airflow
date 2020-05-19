@@ -8,7 +8,7 @@ Data lineage helps you keep track of the origin of data, the transformations don
 You need to have the following setup before you can start using this:
 1. [Apache Airflow](https://airflow.apache.org/docs/stable/start.html)
 2. [Apache Atlas](http://atlas.apache.org)
-3. [Snowflake](https://www.snowflake.com)
+3. [Snowflake Account](https://www.snowflake.com)
 
 
 ### Installation
@@ -16,7 +16,11 @@ You need to have the following setup before you can start using this:
 `pip install atlan-airflow-lineage-plugin`
 
 #### Enable plugin
-1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Just change `backend` to `atlan.lineage.backend.Atlas`
+1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Change `backend` to `atlan.lineage.backend.Atlas`
+```
+[lineage]
+backend = atlan.lineage.backend.Atlas
+```
 
 2. To send lineage to Atlan, change the `backend` value in airflow.cfg like so:
 ```
@@ -26,9 +30,10 @@ backend = atlan.lineage.backend.Atlan
 Generate an access token on Atlan and add the following to airflow.cfg
 ```
 [atlan]
-url = lite.atlan.com/api/v1/caspian
+url = domain.atlan.com
 token = 'my-secret-token' 
 ```
+The value of `url` should be the URL of your Atlan instance.
 
 ### Tutorial
 
@@ -38,7 +43,8 @@ token = 'my-secret-token'
 from atlan.lineage.assets import SnowflakeTable
 ```
 
-2. For every task, configure the inlets and outlets parameters
+
+2. For every task, configure Airflow operator’s inlets and outlets parameters
 
 ```python
 # Sample task
@@ -47,22 +53,26 @@ from atlan.lineage.assets import SnowflakeTable
 # Outlet for task - file 'my_new_table'
 # Let snowflake account name: mi04151.ap-south-1
 # Let snowflake database name: biw 
-# Let snowflake schema names: raw, private
+# Let snowflake schema name: public
 
 sample_task = SnowflakeOperator(
     task_id = "sample_task",
     
-    sql = "CREATE TABLE MY_NEW_TABLE AS SELECT * FROM MY_TABLE",   ## query snowflake
+    ## query snowflake
+    sql = "CREATE TABLE MY_NEW_TABLE AS SELECT * FROM MY_TABLE",
     
-    snowflake_conn_id = "snowflake_common",                        ## snowflake connection id as configured in Airflow connections                                  
+    ## snowflake connection id as configured in Airflow connections                                  
+    snowflake_conn_id = "snowflake_common",
     
-    inlets: {                                                      ## define inlets
-      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/raw/my_table",    
+    ## define inlets
+    inlets: {                                                      
+      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/public/my_table",    
                                   name = "my_table")]    
     },
     
-    outlets: {                                                     ## define outlets
-      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/private/my_new_table",    
+    ## define outlets
+    outlets: {                                                    
+      "datasets": [SnowflakeTable(table_alias = "mi04151.ap-south-1/biw/public/my_new_table",    
                                   name = "my_new_table")]
     }
   )
@@ -71,18 +81,19 @@ sample_task = SnowflakeOperator(
 
 #### Instantiating a SnowflakeTable
 SnowflakeTable takes 2 arguments - `table_alias` and `name`:
-1. `table_alias`: This is a string representing the location of a Snowflake table ie the account, database, schema a table is present in. It follows format `snowflake-account/snowflake-database/snowflake-schema/snowflake-table`, where `snowflake-account` is the name of your snowflake account, etc
+1. `table_alias`: This is a string representing the location of a Snowflake table i.e. the account, database, schema a table is present in. It follows format `snowflake-account/snowflake-database/snowflake-schema/snowflake-table`, where `snowflake-account` is the name of your snowflake account, etc.
+Read more about Snowflake account naming (here)[https://docs.snowflake.com/en/user-guide/python-connector-api.html#usage-notes-for-the-account-parameter-for-the-connect-method].
 2. `name`: This is the name of the table in question
 
-Lets call this `lineage object`
+Let's call this `lineage-object`
 
 #### Anatomy of Airflow Inlets and Outlets
 `Inlets` and `Outlets` are parameters of Airflow operators that allow us to specify task input and output. They follow the following format:
 ```python
 {
     "key": [
-        lineage_object_1,
-        lineage_object_2,
+        lineage-object_1,
+        lineage-object_2,
         .
         .
         .
@@ -104,20 +115,18 @@ This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/li
 
 ```YAML
 ## task definition
-customer_nation_join:
+sample_task:
     operator: airflow.contrib.operators.snowflake_operator.SnowflakeOperator
-    sql: create table biw.private.customer_enriched as select c.c_custkey, c.c_acctbal, c.c_mktsegment, n.n_nationkey, n.n_name from biw.raw.customer c inner join biw.raw.nation n on c.c_nationkey = n.n_nationkey
-    snowflake_conn_id: "snowflake_common"
-    inlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/raw/my_table", name = "my_table")]}'
-    outlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/my_new_table", name = "my_new_table")]}'
+    sql: CREATE TABLE MY_NEW_TABLE AS SELECT * FROM MY_TABLE
+    snowflake_conn_id: snowflake_common
+    inlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/public/my_table", name = "my_table")]}'
+    outlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/public/my_new_table", name = "my_new_table")]}'
 
 ```
 The inlets and outlets are defined same as above, just the dictionary is enclosed in quotes.
 
 
-##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters. You can find the patched at [https://github.com/atlanhq/dag-factory](https://github.com/atlanhq/dag-factory)
-
-
+##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters.
 
 ### Example DAG
 
@@ -174,7 +183,7 @@ filter_apac = SnowflakeOperator(
                            'INDONESIA',
                            'VIETNAM',
                            'PAKISTAN',
-                           'NEW ZEALEAND',
+                           'NEW ZEALAND',
                            'AUSTRALIA')""",
   snowflake_conn_id = "snowflake_common",
   inlets: {
@@ -214,22 +223,26 @@ In the above dag, we have three tasks:
 3. `aggregate_apac`: This task counts the customers present in each APAC nation and creates table `customer_distribition`. The input of this table is the output of upstream task and output is table `customer_distribution`
 
 
-This is what the DAG looks like on Airflow:
 
-![Airflow DAG](/images/airflow_dag_readme_example.png)
+- **Airflow DAG**: This is what the DAG looks like on Airflow </br>
+![](/images/airflow_dag_readme_example.png)
 
-This is what lineage from the dag above is represented in Atlas - you can clearly see which table was produced from which task, which task has which table as input, etc.
 
-![Lineage on Atlas](/images/atlas_lineage_readme_example.png)
 
-The icons in green represent Airflow task - one can see the inputs and outputs for each task. 
-The yellow arrows represent lineage of an entity and the red arrows represent impact of the entity. 
+- **Lineage on Atlas**: This is what lineage from the dag above is represented in Atlas - you can clearly see which table was produced from which task, which task has which table as input, etc.
+![](/images/atlas_lineage_readme_example.png)
 
-This is what the Airflow DAG entity looks on Atlas. You can see the tasks present in the dag, along with other meta.
-![DAG Entity on Atlas](/images/atlas_dag_entity_readme_example.png)
 
-This is what the Airflow Operator entity looks on Atlas. You can see the DAG that the operator is part of, the inputs and outputs for the operator.
-![DAG Entity on Atlas](/images/atlas_op_entity_readme_example.png)
+##### The icons in green represent Airflow task - one can see the inputs and outputs for each task. The yellow arrows represent lineage of an entity and the red arrows represent impact of the entity. 
+
+
+- **DAG Entity on Atlas**: This is what the Airflow DAG entity looks on Atlas. You can see the tasks present in the dag, along with other meta.
+
+![](/images/atlas_dag_entity_readme_example.png)
+
+- **DAG Entity on Atlas**: This is what the Airflow Operator entity looks on Atlas. You can see the DAG that the operator is part of, the inputs and outputs for the operator.
+![](/images/atlas_op_entity_readme_example.png)
+
 
 #### Sample YAML DAG
 
@@ -260,7 +273,7 @@ customer_distribution_apac:
     ## task definition
     filter_apac:
       operator: airflow.contrib.operators.snowflake_operator.SnowflakeOperator
-      sql: create table biw.private.customer_apac as select * from biw.private.customer_enriched where n_name in ('CHINA', 'INDIA', 'INDONESIA', 'VIETNAM', 'PAKISTAN', 'NEW ZEALEAND', 'AUSTRALIA')
+      sql: create table biw.private.customer_apac as select * from biw.private.customer_enriched where n_name in ('CHINA', 'INDIA', 'INDONESIA', 'VIETNAM', 'PAKISTAN', 'NEW ZEALAND', 'AUSTRALIA')
       snowflake_conn_id: "snowflake_common"
       inlets: '{"auto":True}'
       outlets: '{"datasets":[SnowflakeTable(table_alias="mi04151.ap-south-1/biw/private/customer_apac", name = "customer_apac")]}'
@@ -276,7 +289,7 @@ customer_distribution_apac:
 
 ```
 
-##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters. You can find the patched at [https://github.com/atlanhq/dag-factory](https://github.com/atlanhq/dag-factory)
+##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters.
 
 ##### _Sample dags can be found in **examples** folder_
 
