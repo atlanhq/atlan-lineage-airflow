@@ -14,9 +14,7 @@ You need to have the following setup before you can start using this:
 ### Installation
 
 ```
-git clone https://github.com/atlanhq/atlan-lineage-airflow 
-cd atlan-lineage-airflow 
-pip install .
+pip install git+https://github.com/atlanhq/atlan-lineage-airflow 
 ```
 
 #### Enable plugin
