@@ -115,7 +115,7 @@ This plugin supports the [Airflow API](https://airflow.apache.org/docs/stable/li
 
 ```YAML
 ## task definition
-customer_nation_join:
+sample_task:
     operator: airflow.contrib.operators.snowflake_operator.SnowflakeOperator
     sql: CREATE TABLE MY_NEW_TABLE AS SELECT * FROM MY_TABLE
     snowflake_conn_id: snowflake_common
