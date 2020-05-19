@@ -44,7 +44,7 @@ from atlan.lineage.assets import SnowflakeTable
 ```
 
 
-2. For every task, configure the inlets and outlets parameters
+2. For every task, configure Airflow operator’s inlets and outlets parameters
 
 ```python
 # Sample task
@@ -289,7 +289,7 @@ customer_distribution_apac:
 
 ```
 
-##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters. You can find the patched at [https://github.com/atlanhq/dag-factory](https://github.com/atlanhq/dag-factory)
+##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters.
 
 ##### _Sample dags can be found in **examples** folder_
 
