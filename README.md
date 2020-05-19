@@ -224,25 +224,26 @@ In the above dag, we have three tasks:
 
 
 
-
-![Airflow DAG](/images/airflow_dag_readme_example.png)
-This is what the DAG looks like on Airflow
-
+- **Airflow DAG**: This is what the DAG looks like on Airflow
+![](/images/airflow_dag_readme_example.png)
 
 
-![Lineage on Atlas](/images/atlas_lineage_readme_example.png)
-This is what lineage from the dag above is represented in Atlas - you can clearly see which table was produced from which task, which task has which table as input, etc.
+
+- **Lineage on Atlas**: This is what lineage from the dag above is represented in Atlas - you can clearly see which table was produced from which task, which task has which table as input, etc.
+![](/images/atlas_lineage_readme_example.png)
+
 
 The icons in green represent Airflow task - one can see the inputs and outputs for each task. 
 The yellow arrows represent lineage of an entity and the red arrows represent impact of the entity. 
 
 
-![DAG Entity on Atlas](/images/atlas_dag_entity_readme_example.png)
-This is what the Airflow DAG entity looks on Atlas. You can see the tasks present in the dag, along with other meta.
+- **DAG Entity on Atlas**: This is what the Airflow DAG entity looks on Atlas. You can see the tasks present in the dag, along with other meta.
 
+![](/images/atlas_dag_entity_readme_example.png)
 
-![DAG Entity on Atlas](/images/atlas_op_entity_readme_example.png)
-This is what the Airflow Operator entity looks on Atlas. You can see the DAG that the operator is part of, the inputs and outputs for the operator.
+- **DAG Entity on Atlas**: This is what the Airflow Operator entity looks on Atlas. You can see the DAG that the operator is part of, the inputs and outputs for the operator.
+![](/images/atlas_op_entity_readme_example.png)
+
 
 #### Sample YAML DAG
 
