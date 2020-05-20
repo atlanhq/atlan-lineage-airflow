@@ -294,7 +294,7 @@ customer_distribution_apac:
 
 ##### Note:- We used [dag-factory](https://github.com/ajbosco/dag-factory) to create sample YAML dags. We made some changes to enable support for `inlets` & `outlets` parameters.
 
-##### _Sample dags can be found in **examples** folder_
+##### _Sample dags can be found in [**examples**](https://github.com/atlanhq/atlan-lineage-airflow/tree/master/examples) folder_
 
 
 
