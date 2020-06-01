@@ -50,7 +50,7 @@ def create_bulk(data):
                                 {}".format(response.status_code, response.text)
             raise Exception(message)
         else:
-            return None
+            return None 
     except Exception as e:
         raise Exception(e)
 
@@ -93,7 +93,7 @@ class AtlanBackend(Backend):
                 try:
                     if isinstance(entity_dict, dict):
                         log.info("Calling the single entity create API")
-                        create(data=entity_dict)
+                        create_bulk(data=[entity_dict])
                     elif isinstance(entity_dict, list):
                         log.info("Calling the bulk entity create API")
                         create_bulk(data=entity_dict)
@@ -110,7 +110,7 @@ class AtlanBackend(Backend):
                 try:
                     if isinstance(entity_dict, dict):
                         log.info("Calling the single entity create API")
-                        create(data=entity_dict)
+                        create_bulk(data=[entity_dict])
                     elif isinstance(entity_dict, list):
                         log.info("Calling the bulk entity create API")
                         create_bulk(data=entity_dict)
@@ -118,5 +118,9 @@ class AtlanBackend(Backend):
                     log.info("Failed to create outlets. Error: {}".format(e))
 
         log.info("Creating dag and operator entities")
-        create_bulk(data=dag_op_list)
+        log.info("Process: {}".format(dag_op_list))
+        try:
+            create_bulk(data=dag_op_list)
+        except Exception as e:
+            log.info("Failed to create airflow assets. Error: {}".format(e))
         log.info("Done. Created lineage")

@@ -78,9 +78,11 @@ class AtlasBackend(Backend):
                 log.info("Creating input entities")
                 try:
                     if isinstance(entity_dict, dict):
+                        # pass
                         client.entity_post.create(data={"entity":
                                                         entity_dict})
                     elif isinstance(entity_dict, list):
+                        # pass
                         client.entity_bulk.create(data={"entities":
                                                         entity_dict})
                 except Exception as e:
@@ -95,14 +97,20 @@ class AtlasBackend(Backend):
                 log.info("Creating output entities")
                 try:
                     if isinstance(entity_dict, dict):
+                        # pass
                         client.entity_post.create(data={"entity":
                                                         entity_dict})
                     elif isinstance(entity_dict, list):
+                        # pass
                         client.entity_bulk.create(data={"entities":
                                                         entity_dict})
                 except Exception as e:
                     log.info("Failed to create outlets. Error: {}".format(e))
 
         log.info("Creating dag and operator entities")
-        client.entity_bulk.create(data={"entities": dag_op_list})
+        log.info("Process: {}".format(dag_op_list))
+        try:
+            client.entity_bulk.create(data={"entities": dag_op_list})
+        except Exception as e:
+            log.info("Failed to create airflow assets. Error: {}".format(e))
         log.info("Done. Created lineage")
