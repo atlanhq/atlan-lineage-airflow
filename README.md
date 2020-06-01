@@ -33,8 +33,8 @@ backend = atlan.lineage.backend.Atlan
 Generate an access token on Atlan and add the following to airflow.cfg
 ```
 [atlan]
-url = domain.atlan.com
-token = 'my-secret-token' 
+url = domain.atlan.com  # no quotes
+token = my-secret-token  # no quotes
 ```
 The value of `url` should be the URL of your Atlan instance.
 
