@@ -57,12 +57,7 @@ setup_args = dict(
     license='Apache License 2.0',
     packages=packages,
     include_package_data=True,
-    install_requires=reqs,
-    entry_points={
-        'airflow.plugins': [
-            'atlan.api = atlan.api:AtlanRESTApiPlugin'
-        ]
-    }
+    install_requires=reqs
 )
 
 if __name__ == '__main__':
