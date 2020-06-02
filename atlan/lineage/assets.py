@@ -29,6 +29,7 @@ import hashlib
 class Entity(object):
     attributes = []  # type: List[str]
     type_name = ""
+    SOURCE_TYPE = None
 
     def __init__(self, qualified_name=None, data=None, **kwargs):
         self._qualified_name = qualified_name
@@ -79,7 +80,7 @@ class Entity(object):
     def guid(self):
         # type: () -> Union[str, None]
         if self.name:
-            self._guid = str(int(hashlib.md5(self.name.encode()).hexdigest(),
+            self._guid = str(int(hashlib.md5(self.qualified_name.encode()).hexdigest(),
                                  16) * -1)[:10]
         else:
             self._guid = None
@@ -112,78 +113,84 @@ class Entity(object):
         return d
 
 
-class Cluster(Entity):
-    attributes = ["name"]
-    type_name = "cluster"
-
-    def __init__(self, name=None, data=None):
-        super(Entity, self).__init__(name=name, data=data)
+class Source(Entity):
+    attributes = ["name", "sourceType", "type", "host", "port"]
+    type_name = "AtlanSource"
+    # sourceType=sourceType, type=type, host=host, port=port
+    def __init__(self, name=None, data=None, **kwargs):
+        super(Source, self).__init__(name=name, data=data)
 
 
 class DataBase(Entity):
-    type_name = "database"
+    type_name = ""
     attributes = ["name"]
 
-    def __init__(self, name=None, data=None):
+    def __init__(self, name=None, data=None, **kwargs):
         super(Entity, self).__init__(name=name, data=data)
 
 
 class Schema(Entity):
-    type_name = "schema"
+    type_name = ""
     attributes = ["name"]
 
-    def __init__(self, name=None, data=None):
+    def __init__(self, name=None, data=None, **kwargs):
         super(Entity, self).__init__(name=name, data=data)
 
 
 class Table(DataSet):
-    type_name = "table"
+    type_name = ""
     attributes = ["name"]
 
-    def __init__(self, name=None, data=None):
+    def __init__(self, name=None, data=None, **kwargs):
         super(DataSet, self).__init__(name=name, data=data)
 
 
-class SnowflakeAccount(Cluster):
-    type_name = "snowflake_cluster"
-    attributes = ["name"]
+class SnowflakeAccount(Source):
+    type_name = "AtlanSource"
+    attributes = ["name", "sourceType", "type", "host", "port"]
+    SOURCE_TYPE = 'SNOWFLAKE'
 
-    def __init__(self, name, data=None):
-        super(Cluster, self).__init__(name=name, data=data)
-        self._qualified_name = 'cluster://' + self.name
+    def __init__(self, name, data=None, **kwargs):
+        super(Source, self).__init__(name=name, data=data, sourceType='SNOWFLAKE', type='snowflake', host=name)
+        self._qualified_name = ':SNOWFLAKE://' + self.name
 
 
 class SnowflakeDatabase(DataBase):
-    type_name = "snowflake_database"
-    attributes = ["name"]
+    type_name = "AtlanDatabase"
+    attributes = ["name", "sourceType"]
+    SOURCE_TYPE = 'SNOWFLAKE'
 
-    def __init__(self, name, parent, data=None):
-        super(DataBase, self).__init__(name=name, data=data)
-        self._qualified_name = parent.name + '://' + self.name
-        self._data['cluster'] = parent.as_reference()
+    def __init__(self, name, parent, data=None, **kwargs):
+        super(DataBase, self).__init__(name=name, data=data, sourceType='SNOWFLAKE')
+        self._qualified_name = parent.qualified_name + '/' + self.name
+        self._data['source'] = parent.as_reference()
 
 
 class SnowflakeSchema(Schema):
-    type_name = "snowflake_schema"
-    attributes = ["name"]
+    type_name = "AtlanSchema"
+    attributes = ["name", "sourceType"]
+    SOURCE_TYPE = 'SNOWFLAKE'
 
-    def __init__(self, name, parent, data=None):
-        super(Schema, self).__init__(name=name, data=data)
-        self._qualified_name = parent.qualified_name + '.' + self.name
+    def __init__(self, name, parent, source, data=None, **kwargs):
+        super(Schema, self).__init__(name=name, data=data, sourceType='SNOWFLAKE')
+        self._qualified_name = parent.qualified_name + '/' + self.name
         self._data['database'] = parent.as_reference()
+        self._data['source'] = source.as_reference()
 
 
 class SnowflakeTable(Table):
-    type_name = "snowflake_table"
-    attributes = ["name"]
+    type_name = "AtlanTable"
+    attributes = ["name", "sourceType"]
+    SOURCE_TYPE = 'SNOWFLAKE'
 
     def __init__(self, name=None, table_alias=None, connection_id=None,
-                 data=None):
-        super(Table, self).__init__(name=name, data=data)
+                 data=None, **kwargs):
+        super(Table, self).__init__(name=name, data=data, sourceType='SNOWFLAKE')
         if name:
-            parent = self.create_parent_entities(table_alias, connection_id)
-            self._qualified_name = parent.qualified_name + '/' + self.name
-            self._data['parentSchema'] = parent.as_reference()
+            source, parent = self.create_parent_entities(table_alias, connection_id)
+            self._qualified_name = parent.qualified_name + '/' + name
+            self._data['atlanSchema'] = parent.as_reference()
+            self._data['source'] = source.as_reference()
 
     def parse_alias(self, string):
         # type: (str) -> Tuple[str, str, str]
@@ -197,9 +204,9 @@ class SnowflakeTable(Table):
         if table_alias:
             account, db, schema = self.parse_alias(table_alias)
         self.account = SnowflakeAccount(account)
-        self.db = SnowflakeDatabase(db, self.account)
-        self.schema = SnowflakeSchema(schema, self.db)
-        return self.schema
+        self.db = SnowflakeDatabase(db, parent=self.account)
+        self.schema = SnowflakeSchema(schema, parent=self.db, source=self.account)
+        return self.account, self.schema
 
     # TODO: change function name
     def as_nested_dict(self):
@@ -234,16 +241,23 @@ class SnowflakeTable(Table):
         }
         return d
 
+class AtlanJob(Entity):
+    type_name = "AtlanJob"
+    # attributes = ["name", "dag_id", "execution_date", "run_id"]
+    attributes = ["name", "description", "source", "extra", "schedule", "jobCreatedAt", "jobUpdatedAt", "sourceType"]
 
-class Dag(Entity):
-    type_name = "airflow_dag"
-    attributes = ["name", "dag_id", "execution_date", "run_id"]
+class AtlanJobRun(Entity):
+    type_name = "AtlanJobRun"
+    # attributes = ["name", "dag_id", "execution_date", "run_id"]
+    attributes = ["name", "description", "runId", "extra", "processes", "job", "source", "runStatus", "runStartedAt", "runEndedAt", "sourceType", "runType"]
 
 
-class Operator(DataSet):
-    type_name = "airflow_operator"
+class AtlanProcess(DataSet):
+    type_name = "AtlanProcess"
 
-    # todo we can derive this from the spec
-    attributes = ["dag_id", "task_id", "command", "conn_id", "name",
-                  "execution_date", "start_date", "end_date", "inputs",
-                  "outputs", "airflow_dag"]
+    # todo we can derive this from the spec 
+    # attributes = ["dag_id", "task_id", "command", "conn_id", "name",
+    #               "execution_date", "start_date", "end_date", "inputs",
+    #               "outputs", "airflow_dag"]
+    attributes = ["name", "description", "processStartedAt", "processEndedAt", "processStatus", "inputs",
+                  "outputs", "job_run", "extra", "sourceType"]

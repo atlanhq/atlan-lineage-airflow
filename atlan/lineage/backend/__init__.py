@@ -16,4 +16,3 @@
 #
 
 from atlan.lineage.backend.atlan import AtlanBackend as Atlan  # noqa: F401
-from atlan.lineage.backend.atlas import AtlasBackend as Atlas  # noqa: F401
