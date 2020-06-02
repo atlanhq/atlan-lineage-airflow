@@ -2,13 +2,13 @@
 
 #### This plugin allows you to send lineage metadata from Airflow to Atlan
 
-Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for operation on Snowflake entities. This lineage can then be viewed on Atlas or [Atlan](https://atlan.com)
+Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for operation on Snowflake entities. This lineage can then be viewed on [Atlan](https://atlan.com)
 
 
 ### Prerequisites
 You need to have the following setup before you can start using this:
 1. [Apache Airflow](https://airflow.apache.org/docs/stable/start.html)
-2. [Apache Atlas](http://atlas.apache.org)
+2. [Atlan Account](https://atlan.com)
 3. [Snowflake Account](https://www.snowflake.com)
 
 
@@ -19,13 +19,8 @@ pip install git+https://github.com/atlanhq/atlan-lineage-airflow
 ```
 
 #### Enable plugin
-1. To send lineage to Atlas, follow the instructions given [here](https://airflow.apache.org/docs/stable/lineage.html#apache-atlas). Change `backend` to `atlan.lineage.backend.Atlas`
-```
-[lineage]
-backend = atlan.lineage.backend.Atlas
-```
 
-2. To send lineage to Atlan, change the `backend` value in airflow.cfg like so:
+To send lineage to Atlan, change the `backend` value in airflow.cfg like so:
 ```
 [lineage]
 backend = atlan.lineage.backend.Atlan
@@ -33,8 +28,8 @@ backend = atlan.lineage.backend.Atlan
 Generate an access token on Atlan and add the following to airflow.cfg
 ```
 [atlan]
-url = domain.atlan.com
-token = 'my-secret-token' 
+url = domain.atlan.com  # no quotes
+token = my-secret-token  # no quotes
 ```
 The value of `url` should be the URL of your Atlan instance.
 
