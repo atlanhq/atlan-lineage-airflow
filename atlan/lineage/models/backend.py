@@ -22,7 +22,7 @@ import copy
 
 from airflow.utils.timezone import convert_to_utc  # type: ignore
 from airflow.utils.log.logging_mixin import LoggingMixin  # type: ignore
-from airflow.utils.net import get_hostname, get_host_ip_address
+from airflow.utils.net import get_hostname, get_host_ip_address  # type: ignore
 from airflow.configuration import conf
 
 from atlan.lineage.assets import AtlanJobRun, AtlanProcess, AtlanJob, Source
