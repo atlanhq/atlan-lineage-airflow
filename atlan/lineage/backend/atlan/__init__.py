@@ -50,7 +50,7 @@ def create_bulk(data):
                                 {}".format(response.status_code, response.text)
             raise Exception(message)
         else:
-            return None 
+            return None
     except Exception as e:
         raise Exception(e)
 
