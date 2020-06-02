@@ -29,7 +29,7 @@ import hashlib
 class Entity(object):
     attributes = []  # type: List[str]
     type_name = ""
-    SOURCE_TYPE = None
+    SOURCE_TYPE = ""
 
     def __init__(self, qualified_name=None, data=None, **kwargs):
         self._qualified_name = qualified_name
@@ -117,6 +117,7 @@ class Entity(object):
 class Source(Entity):
     attributes = ["name", "sourceType", "type", "host", "port"]
     type_name = "AtlanSource"
+    SOURCE_TYPE = ""
 
     def __init__(self, name=None, data=None, **kwargs):
         super(Source, self).__init__(name=name, data=data)
@@ -125,6 +126,7 @@ class Source(Entity):
 class DataBase(Entity):
     type_name = ""
     attributes = ["name"]
+    SOURCE_TYPE = ""
 
     def __init__(self, name=None, data=None, **kwargs):
         super(Entity, self).__init__(name=name, data=data)
@@ -133,6 +135,7 @@ class DataBase(Entity):
 class Schema(Entity):
     type_name = ""
     attributes = ["name"]
+    SOURCE_TYPE = ""
 
     def __init__(self, name=None, data=None, **kwargs):
         super(Entity, self).__init__(name=name, data=data)
@@ -141,6 +144,7 @@ class Schema(Entity):
 class Table(DataSet):
     type_name = ""
     attributes = ["name"]
+    SOURCE_TYPE = ""
 
     def __init__(self, name=None, data=None, **kwargs):
         super(DataSet, self).__init__(name=name, data=data)
