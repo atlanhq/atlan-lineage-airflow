@@ -25,6 +25,8 @@ from airflow.lineage.datasets import DataSet  # type: ignore
 
 import hashlib
 
+DEFAULT_TENANT = ''
+
 
 class Entity(object):
     attributes = []  # type: List[str]
@@ -159,7 +161,7 @@ class SnowflakeAccount(Source):
         super(Source, self).__init__(name=name, data=data,
                                      sourceType='SNOWFLAKE',
                                      type='snowflake', host=name)
-        self._qualified_name = 'DEFAULT_TENANT:SNOWFLAKE://' + self.name
+        self._qualified_name = '{}:SNOWFLAKE://'.format(DEFAULT_TENANT) + self.name
 
 
 class SnowflakeDatabase(DataBase):
