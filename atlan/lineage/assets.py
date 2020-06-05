@@ -117,7 +117,7 @@ class Entity(object):
 
 
 class Source(Entity):
-    attributes = ["name", "sourceType", "type", "host", "port"]
+    attributes = ["name", "sourceType", "type", "host", "port", "typeName"]
     type_name = "AtlanSource"
     SOURCE_TYPE = ""
 
@@ -263,7 +263,8 @@ class AtlanJob(Entity):
     type_name = "AtlanJob"
 
     attributes = ["name", "description", "source", "extra", "schedule",
-                  "jobCreatedAt", "jobUpdatedAt", "sourceType", "description"]
+                  "jobCreatedAt", "jobUpdatedAt", "sourceType", "description",
+                  "typeName"]
 
 
 class AtlanJobRun(Entity):
@@ -271,7 +272,7 @@ class AtlanJobRun(Entity):
 
     attributes = ["name", "description", "runId", "extra", "processes", "job",
                   "source", "runStatus", "runStartedAt", "runEndedAt",
-                  "sourceType", "runType", "description"]
+                  "sourceType", "runType", "description", "typeName"]
 
 
 class AtlanProcess(DataSet):
@@ -279,4 +280,4 @@ class AtlanProcess(DataSet):
 
     attributes = ["name", "description", "processStartedAt", "processEndedAt",
                   "processStatus", "inputs", "outputs", "job_run", "extra",
-                  "sourceType", "description"]
+                  "sourceType", "description", "typeName"]

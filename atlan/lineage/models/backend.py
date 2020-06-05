@@ -111,7 +111,8 @@ class Backend(AtlasBackend):
             "host": get_host_ip_address(),
             "port": conf.get("webserver", "web_server_port"),
             "type": "airflow",
-            "sourceType": "AIRFLOW"
+            "sourceType": "AIRFLOW",
+            "typeName": "AtlanSource"
         }
 
         airflow_source = Source(data=data)
@@ -130,7 +131,8 @@ class Backend(AtlasBackend):
             "jobUpdatedAt": convert_to_utc(
                 context['dag'].last_loaded).strftime(
                     SERIALIZED_DATE_FORMAT_STR),
-            "sourceType": "AIRFLOW"
+            "sourceType": "AIRFLOW",
+            "typeName": "AtlanJob"
         }
 
         if context['dag']._description:
@@ -155,7 +157,8 @@ class Backend(AtlasBackend):
             "runStatus": _DAG_RUN_STATUS_MAP.get(
                 context['dag_run']._state, None),
             "extra": Backend._get_dag_run_meta(context),
-            "sourceType": "AIRFLOW"
+            "sourceType": "AIRFLOW",
+            "typeName": "AtlanJobRun"
         }
 
         if context['dag_run'].external_trigger:
@@ -196,7 +199,8 @@ class Backend(AtlasBackend):
             "extra": Backend._get_task_meta(context),
             "processStatus": _TASK_RUN_STATUS_MAP.get(
                 context['task_instance'].state, None),
-            "sourceType": "AIRFLOW"
+            "sourceType": "AIRFLOW",
+            "typeName": "AtlanProcess"
         }
 
         if _start_date:
