@@ -154,36 +154,40 @@ class Table(DataSet):
 
 class SnowflakeAccount(Source):
     type_name = "AtlanSource"
-    attributes = ["name", "sourceType", "type", "host", "port"]
+    attributes = ["name", "sourceType", "type", "host", "port", "typeName"]
     SOURCE_TYPE = 'SNOWFLAKE'
 
     def __init__(self, name, data=None, **kwargs):
         super(Source, self).__init__(name=name, data=data,
                                      sourceType='SNOWFLAKE',
-                                     type='snowflake', host=name)
-        self._qualified_name = '{}:SNOWFLAKE://'.format(DEFAULT_TENANT) + self.name
+                                     type='snowflake', host=name,
+                                     typeName='AtlanSource')
+        self._qualified_name = '{}:SNOWFLAKE://'.format(DEFAULT_TENANT) + \
+            self.name
 
 
 class SnowflakeDatabase(DataBase):
     type_name = "AtlanDatabase"
-    attributes = ["name", "sourceType"]
+    attributes = ["name", "sourceType", "typeName"]
     SOURCE_TYPE = 'SNOWFLAKE'
 
     def __init__(self, name, parent, data=None, **kwargs):
         super(DataBase, self).__init__(name=name, data=data,
-                                       sourceType='SNOWFLAKE')
+                                       sourceType='SNOWFLAKE',
+                                       typeName='AtlanDatabase')
         self._qualified_name = parent.qualified_name + '/' + self.name
         self._data['source'] = parent.as_reference()
 
 
 class SnowflakeSchema(Schema):
     type_name = "AtlanSchema"
-    attributes = ["name", "sourceType"]
+    attributes = ["name", "sourceType", "typeName"]
     SOURCE_TYPE = 'SNOWFLAKE'
 
     def __init__(self, name, parent, source, data=None, **kwargs):
         super(Schema, self).__init__(name=name, data=data,
-                                     sourceType='SNOWFLAKE')
+                                     sourceType='SNOWFLAKE',
+                                     typeName='AtlanSchema')
         self._qualified_name = parent.qualified_name + '/' + self.name
         self._data['database'] = parent.as_reference()
         self._data['source'] = source.as_reference()
@@ -191,13 +195,14 @@ class SnowflakeSchema(Schema):
 
 class SnowflakeTable(Table):
     type_name = "AtlanTable"
-    attributes = ["name", "sourceType"]
+    attributes = ["name", "sourceType", "typeName"]
     SOURCE_TYPE = 'SNOWFLAKE'
 
     def __init__(self, name=None, table_alias=None, connection_id=None,
                  data=None, **kwargs):
         super(Table, self).__init__(name=name, data=data,
-                                    sourceType='SNOWFLAKE')
+                                    sourceType='SNOWFLAKE',
+                                    typeName='AtlanTable')
         if name:
             source, parent = self.create_parent_entities(table_alias, connection_id)  # noqa: E501
             self._qualified_name = parent.qualified_name + '/' + name
