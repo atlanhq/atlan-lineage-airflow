@@ -5,6 +5,34 @@
 Data lineage helps you keep track of the origin of data, the transformations done on it over time  and its impact in an organization. Airflow has [built-in support](https://airflow.apache.org/docs/stable/lineage.html) to send lineage metadata to Apache Atlas. This plugin leverages that and enables you to create lineage metadata for operation on Snowflake entities. This lineage can then be viewed on [Atlan](https://atlan.com)
 
 
+---
+## How to create your own custom Atlan-lineage plugin for airflow?
+
+This section describes how we can use already provided airflow backend apis to write a custom lineage plugin that can later be used with airflow dags for gathering lineage information. Currently we have used these steps to create a SnowflakeTable utility that get lineage information for snowflake table when processed using Airflow DAGs.
+
+_Note:_ We will use current snowflake's implementation as example and continue to reference it as needed.
+
+1. **Creating Entity definition:**
+
+For Airflow to send lineage information to Atlan we need to define the structure of Airflow `DataSet` analogous to Atlan entities. Each DataSet is parsed as a Atlan Entity with its parent(if exist) as its super class. 
+
+Here, [Entity](https://github.com/atlanhq/atlan-lineage-airflow/blob/72158f0b13286bb344bfddfd712684b7b072db71/atlan/lineage/assets.py#L31) class is used to further define source [snowflake account](https://github.com/atlanhq/atlan-lineage-airflow/blob/72158f0b13286bb344bfddfd712684b7b072db71/atlan/lineage/assets.py#L155), [database](https://github.com/atlanhq/atlan-lineage-airflow/blob/72158f0b13286bb344bfddfd712684b7b072db71/atlan/lineage/assets.py#L167) and [schema](https://github.com/atlanhq/atlan-lineage-airflow/blob/72158f0b13286bb344bfddfd712684b7b072db71/atlan/lineage/assets.py#L179) from where a [SnowflakeTable (DataSet)](https://github.com/atlanhq/atlan-lineage-airflow/blob/72158f0b13286bb344bfddfd712684b7b072db71/atlan/lineage/assets.py#L192) is obtained. All this information is then parsed and sent to 
+
+2. **Creating Airflow DataSet:**
+
+Airflow's lineage works with taking an abstract class `DataSet` as input and producing the same as output. We can inherit this class with the implementation of our asset. We can further define the structure associated with our asset like it's parent and origin in the same class itself. 
+
+[Here](https://github.com/atlanhq/atlan-lineage-airflow/blob/72158f0b13286bb344bfddfd712684b7b072db71/atlan/lineage/assets.py#L192) we use SnowflakeTable to inherit airflow's [DataSet](https://github.com/atlanhq/atlan-lineage-airflow/blob/72158f0b13286bb344bfddfd712684b7b072db71/atlan/lineage/assets.py#L146) and define snowflake account, database and schema as SnowflakeTable's parent. This relationship will be true for all the databases.
+
+
+3. **Defining / Changing current AtlanBackend:**
+
+[Atlan Backend](https://github.com/atlanhq/atlan-lineage-airflow/blob/72158f0b13286bb344bfddfd712684b7b072db71/atlan/lineage/models/backend.py#L49) is a utility class defined over Atlas Backend provided by Airflow. This takes the `DataSet` defined earlier and formats all the information about DataSet and the current DAG, so that it is ready to be ingested Atlan's backend. If you're writing a new plugin for any other database, this part would be needing no change.
+
+---
+
+## Steps to use Snowflake Table plugin for lineage as example.
+
 ### Prerequisites
 You need to have the following setup before you can start using this:
 1. [Apache Airflow](https://airflow.apache.org/docs/stable/start.html)
